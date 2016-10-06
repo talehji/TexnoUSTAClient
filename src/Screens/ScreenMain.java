@@ -94,8 +94,10 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
         tmodel.addColumn("Mütəxəsis");
-        tmodel.addColumn("Tarix");
-        tmodel.addColumn("Saat");
+        tmodel.addColumn("Planlaşdırılmış Tarix");
+        tmodel.addColumn("Tapşırıq Tarixi");
+        tmodel.addColumn("Saatı");
+        
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTable1.setRowHeight(20);
         jTable1.setFont(new Font("Tahoma", Font.PLAIN, 14));
@@ -114,13 +116,15 @@ public final class ScreenMain extends javax.swing.JFrame {
                         b.getIdDaxilOlan().getTelefon(),
                         b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
                         b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
+                        b.getIdDaxilOlan().getDatePlan(),
                         d.format(b.getDate()),
-                        s.format(b.getDate())
+                        s.format(b.getDate()),
                     });
                 }
             }
         });
     }
+
     private void FillTheTableCetin() {
         DefaultTableModel tmodel = new DefaultTableModel() {
             @Override
@@ -135,8 +139,10 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
         tmodel.addColumn("Mütəxəsis");
-        tmodel.addColumn("Tarix");
-        tmodel.addColumn("Saat");
+        tmodel.addColumn("Planlaşdırılmış Tarix");
+        tmodel.addColumn("Tapşırıq Tarixi");
+        tmodel.addColumn("Saatı");
+        
         jTable2.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTable2.setRowHeight(20);
         jTable2.setFont(new Font("Tahoma", Font.PLAIN, 14));
@@ -155,8 +161,9 @@ public final class ScreenMain extends javax.swing.JFrame {
                         b.getIdDaxilOlan().getTelefon(),
                         b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
                         b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
+                        b.getIdDaxilOlan().getDatePlan(),
                         d.format(b.getDate()),
-                        s.format(b.getDate())
+                        s.format(b.getDate()),
                     });
                 }
             }
@@ -558,16 +565,16 @@ public final class ScreenMain extends javax.swing.JFrame {
                     .setParameter("idMutexesisWork", Integer.parseInt(id))
                     .getSingleResult();
 
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("3");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
-            }
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("3");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+        }
 
         Refresh();
     }//GEN-LAST:event_jMenuItemCetineatActionPerformed
@@ -589,16 +596,16 @@ public final class ScreenMain extends javax.swing.JFrame {
                     .setParameter("idMutexesisWork", Integer.parseInt(id))
                     .getSingleResult();
 
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("1");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
-            }
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("1");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+        }
 
         Refresh();
     }//GEN-LAST:event_jMenuItem1ActionPerformed
