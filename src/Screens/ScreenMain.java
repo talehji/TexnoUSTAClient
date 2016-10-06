@@ -77,6 +77,7 @@ public final class ScreenMain extends javax.swing.JFrame {
 
     public void Refresh() {
         FillTheTableGonderilen();
+        FillTheTableCetin();
     }
 
     private void FillTheTableGonderilen() {
@@ -120,6 +121,47 @@ public final class ScreenMain extends javax.swing.JFrame {
             }
         });
     }
+    private void FillTheTableCetin() {
+        DefaultTableModel tmodel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+        };
+        tmodel.addColumn("ID");
+        tmodel.addColumn("ID Daxil Olan");
+        tmodel.addColumn("Ad");
+        tmodel.addColumn("Telefon");
+        tmodel.addColumn("Model Marka");
+        tmodel.addColumn("Mütəxəsis");
+        tmodel.addColumn("Tarix");
+        tmodel.addColumn("Saat");
+        jTable2.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTable2.setRowHeight(20);
+        jTable2.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        jTable2.setModel(tmodel);
+
+        ListOfMutexesislerWork.stream().forEach((b) -> {
+            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+
+            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
+                if (b.getStatus().equals("3")) {
+                    tmodel.insertRow(jTable2.getRowCount(), new Object[]{
+                        b.getIdMutexesisWork(),
+                        b.getIdDaxilOlan().getIdDaxilOlan(),
+                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
+                        b.getIdDaxilOlan().getTelefon(),
+                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
+                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
+                        d.format(b.getDate()),
+                        s.format(b.getDate())
+                    });
+                }
+            }
+        });
+    }
 //
 
     /**
@@ -131,6 +173,10 @@ public final class ScreenMain extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jPopupMenu1 = new javax.swing.JPopupMenu();
+        jMenuItemCetineat = new javax.swing.JMenuItem();
+        jPopupMenu2 = new javax.swing.JPopupMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
         jLabel1 = new javax.swing.JLabel();
         jToolBar1 = new javax.swing.JToolBar();
         jButton8 = new javax.swing.JButton();
@@ -145,6 +191,26 @@ public final class ScreenMain extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jPanel2 = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTable2 = new javax.swing.JTable();
+
+        jMenuItemCetineat.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat.setText("Çətin Tapşırığa yönəlt");
+        jMenuItemCetineat.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineatActionPerformed(evt);
+            }
+        });
+        jPopupMenu1.add(jMenuItemCetineat);
+
+        jMenuItem1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem1.setText("Tapşırığa yönəlt");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        jPopupMenu2.add(jMenuItem1);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -246,6 +312,7 @@ public final class ScreenMain extends javax.swing.JFrame {
 
             }
         ));
+        jTable1.setComponentPopupMenu(jPopupMenu1);
         jTable1.setGridColor(new java.awt.Color(153, 153, 153));
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
@@ -273,15 +340,38 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         jTabbedPane1.addTab("Tapşırıq", jPanel1);
 
+        jTable2.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jTable2.setComponentPopupMenu(jPopupMenu2);
+        jTable2.setGridColor(new java.awt.Color(153, 153, 153));
+        jTable2.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTable2MouseClicked(evt);
+            }
+        });
+        jScrollPane2.setViewportView(jTable2);
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 935, Short.MAX_VALUE)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 480, Short.MAX_VALUE)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 458, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jTabbedPane1.addTab("Çətin tapşırıqlar", jPanel2);
@@ -353,7 +443,7 @@ public final class ScreenMain extends javax.swing.JFrame {
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
-            if (j.Status == 1) {
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
 
                 Mutexesiswork f = new Mutexesiswork();
                 f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
@@ -383,7 +473,7 @@ public final class ScreenMain extends javax.swing.JFrame {
                     .getSingleResult();
             ScreenDetalGozleyir h = new ScreenDetalGozleyir(this, rootPaneCheckingEnabled, S);
             h.setVisible(rootPaneCheckingEnabled);
-            if (h.Status == 1) {
+            if (ScreenDetalGozleyir.Status == 1) {
 
                 Mutexesiswork f = new Mutexesiswork();
                 f.setIdMutexesisWork(S.getIdMutexesisWork());
@@ -455,6 +545,64 @@ public final class ScreenMain extends javax.swing.JFrame {
         d.setVisible(rootPaneCheckingEnabled);
     }//GEN-LAST:event_jButton6ActionPerformed
 
+    private void jMenuItemCetineatActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineatActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int index = jTable1.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Refresh();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("3");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+
+        Refresh();
+    }//GEN-LAST:event_jMenuItemCetineatActionPerformed
+
+    private void jTable2MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable2MouseClicked
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jTable2MouseClicked
+
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTable2.getModel();
+        int index = jTable2.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Refresh();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("1");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+
+        Refresh();
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton11;
     private javax.swing.JButton jButton12;
@@ -464,11 +612,17 @@ public final class ScreenMain extends javax.swing.JFrame {
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton8;
     private javax.swing.JLabel jLabel1;
+    private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItemCetineat;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPopupMenu jPopupMenu1;
+    private javax.swing.JPopupMenu jPopupMenu2;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTable1;
+    private javax.swing.JTable jTable2;
     private javax.swing.JToolBar jToolBar1;
     // End of variables declaration//GEN-END:variables
 }

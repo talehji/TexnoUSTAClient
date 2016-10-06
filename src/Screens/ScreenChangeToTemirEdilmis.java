@@ -187,8 +187,8 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         em.getTransaction().commit();
         
         Temir t = new Temir(0);
-        t.setIdDaxilOlan(""+S.getIdDaxilOlan().getIdDaxilOlan());
-        t.setIdMutexesis(""+S.getIdMutexesisler().getIdMutexesisler());
+        t.setIdDaxilOlan(S.getIdDaxilOlan().getIdDaxilOlan().toString());
+        t.setIdMutexesis(S.getIdMutexesisler().getIdMutexesisler().toString());
         em.merge(t);
         em.getTransaction().begin();
         em.getTransaction().commit();
@@ -197,7 +197,7 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         i.setMedaxil(0.00);
         i.setMexaric(Double.parseDouble(jTextFieldSerf.getText()));
         i.setDate(Date);
-        i.setIdDaxilOlan(""+S.getIdDaxilOlan().getIdDaxilOlan());
+        i.setIdDaxilOlan(S.getIdDaxilOlan().getIdDaxilOlan().toString());
         i.setTerefinden("1");
         i.setAciqlama("");
         i.setQeyd("");
