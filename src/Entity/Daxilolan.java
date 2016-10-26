@@ -49,6 +49,11 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Daxilolan.findByGy", query = "SELECT d FROM Daxilolan d WHERE d.gy = :gy")})
 public class Daxilolan implements Serializable {
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "idDaxilOlan")
+    private Collection<Tehvil> tehvilCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "idDaxilOlan")
+    private Collection<Temir> temirCollection;
+
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -301,6 +306,24 @@ public class Daxilolan implements Serializable {
     @Override
     public String toString() {
         return "Entity.Daxilolan[ idDaxilOlan=" + idDaxilOlan + " ]";
+    }
+
+    @XmlTransient
+    public Collection<Tehvil> getTehvilCollection() {
+        return tehvilCollection;
+    }
+
+    public void setTehvilCollection(Collection<Tehvil> tehvilCollection) {
+        this.tehvilCollection = tehvilCollection;
+    }
+
+    @XmlTransient
+    public Collection<Temir> getTemirCollection() {
+        return temirCollection;
+    }
+
+    public void setTemirCollection(Collection<Temir> temirCollection) {
+        this.temirCollection = temirCollection;
     }
     
 }

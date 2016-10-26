@@ -1,41 +1,36 @@
 package Screens;
 
-import Entity.Daxilolan;
-import Entity.Daxilolannov;
-import Entity.Mutexesiswork;
-import com.toedter.calendar.JCalendar;
+import ConnectionDB.ConnMySql;
+import Object.DaxilOlan;
+import Object.DaxilOlanNov;
+import Object.MutexesisWork;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 public class ScreenBax extends javax.swing.JDialog {
 
-    Mutexesiswork S;
-    private final EntityManager em;
-    private final Daxilolannov DaxilOlanNov;
+    MutexesisWork S;
+//    private final Daxilolannov DaxilOlanNov;
+    private final ConnMySql conn;
+    private final DaxilOlanNov DaxilOlanNov;
 
-    public ScreenBax(java.awt.Frame parent, boolean modal, Mutexesiswork d) {
+    public ScreenBax(java.awt.Frame parent, boolean modal, MutexesisWork d) {
         super(parent, modal);
         initComponents();
         this.S = d;
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("TexnoUSTA_ClientPU");
-        em = emf.createEntityManager();
-        DaxilOlanNov = em.createNamedQuery("Daxilolannov.findByIdDaxilOlanNov", Daxilolannov.class)
-                .setParameter("idDaxilOlanNov", Integer.parseInt(S.getIdDaxilOlan().getIdDaxilOlanNov()))
-                .getSingleResult();
-        jTextFieldID.setText("" + S.getIdDaxilOlan().getIdDaxilOlan());
-        jTextFieldAd.setText(S.getIdDaxilOlan().getAd());
-        jTextFieldSoyad.setText(S.getIdDaxilOlan().getSoyad());
-        jTextFieldTelefon.setText(S.getIdDaxilOlan().getTelefon());
-        jTextFieldDaxilOlan.setText(DaxilOlanNov.getAd());
-        jTextFieldModel.setText(S.getIdDaxilOlan().getModel());
-        jTextFieldMarka.setText(S.getIdDaxilOlan().getMarka());
-        jTextFieldAksesuar.setText(S.getIdDaxilOlan().getAksesuar());
-        jEditorPaneProblem.setText(S.getIdDaxilOlan().getProblem());
-        jEditorPaneQeyd.setText(S.getIdDaxilOlan().getQeyd());
-        jLabelDatePlan.setText("Planlaşdırılmış tarix: " + S.getIdDaxilOlan().getDatePlan());
+        conn = new ConnMySql();
+        DaxilOlanNov = conn.DaxilOlanNovFindByIdDaxilOlanNov(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).idDaxilOlanNov);
+
+        jTextFieldID.setText("" + conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).idDaxilOlan);
+        jTextFieldAd.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Ad);
+        jTextFieldSoyad.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Soyad);
+        jTextFieldTelefon.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Telefon);
+        jTextFieldDaxilOlan.setText(DaxilOlanNov.Ad);
+        jTextFieldModel.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Model);
+        jTextFieldMarka.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Marka);
+        jTextFieldAksesuar.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Aksesuar);
+        jEditorPaneProblem.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Problem);
+        jEditorPaneQeyd.setText(conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Qeyd);
+        jLabelDatePlan.setText("Planlaşdırılmış tarix: " + conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).DatePlan);
     }
 
     @SuppressWarnings("unchecked")
@@ -123,7 +118,6 @@ public class ScreenBax extends javax.swing.JDialog {
         jEditorPaneProblem.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
         jEditorPaneProblem.setMinimumSize(new java.awt.Dimension(20, 20));
         jEditorPaneProblem.setPreferredSize(new java.awt.Dimension(20, 20));
-        jEditorPaneProblem.setRequestFocusEnabled(false);
         jScrollPane1.setViewportView(jEditorPaneProblem);
 
         jEditorPaneQeyd.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
@@ -171,11 +165,10 @@ public class ScreenBax extends javax.swing.JDialog {
                         .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 156, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabelDatePlan, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel10, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel13, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, 91, Short.MAX_VALUE)
+                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, 93, Short.MAX_VALUE)
                             .addComponent(jLabel15, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(jLabel17, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -184,20 +177,22 @@ public class ScreenBax extends javax.swing.JDialog {
                             .addComponent(jLabel9, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jTextFieldModel)
-                            .addComponent(jTextFieldAd)
-                            .addComponent(jTextFieldSoyad)
-                            .addComponent(jTextFieldTelefon)
-                            .addComponent(jTextFieldAksesuar)
-                            .addComponent(jTextFieldMarka, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
-                            .addComponent(jTextFieldID)
-                            .addComponent(jTextFieldDaxilOlan, javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, 277, Short.MAX_VALUE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldModel, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldAd, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldSoyad, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldTelefon, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldAksesuar, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldMarka, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldID, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldDaxilOlan, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 483, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addComponent(jLabelDatePlan, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jDateChooser1, javax.swing.GroupLayout.PREFERRED_SIZE, 196, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -243,7 +238,7 @@ public class ScreenBax extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel13))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
                     .addComponent(jDateChooser1, javax.swing.GroupLayout.DEFAULT_SIZE, 23, Short.MAX_VALUE)
                     .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -264,33 +259,23 @@ public class ScreenBax extends javax.swing.JDialog {
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-
-        Daxilolan d = new Daxilolan(S.getIdDaxilOlan().getIdDaxilOlan());
-        d.setAd(jTextFieldAd.getText());
-        d.setSoyad(jTextFieldSoyad.getText());
-        d.setTelefon(jTextFieldTelefon.getText());
-        d.setIdDaxilOlanNov(S.getIdDaxilOlan().getIdDaxilOlanNov());
-        d.setModel(jTextFieldModel.getText());
-        d.setMarka(jTextFieldMarka.getText());
-        d.setAksesuar(jTextFieldAksesuar.getText());
-        d.setProblem(jEditorPaneProblem.getText());
-        d.setNetice(S.getIdDaxilOlan().getNetice());
-        d.setQeyd(jEditorPaneQeyd.getText());
-        d.setDate(S.getIdDaxilOlan().getDate());
-        d.setIsActive("6");
         try {
             SimpleDateFormat as = new SimpleDateFormat("yyyy-MM-dd");
             String Date = as.format(jDateChooser1.getDate());
-            d.setDatePlan(Date);
-        } catch (Exception e) {
-            d.setDatePlan(S.getIdDaxilOlan().getDatePlan());
+            conn.DaxilOlanInsertUpdate(new DaxilOlan(Integer.parseInt(jTextFieldID.getText()), jTextFieldAd.getText(), jTextFieldSoyad.getText(),
+                     jTextFieldTelefon.getText(), DaxilOlanNov.idDaxilOlanNov, jTextFieldModel.getText(),
+                     jTextFieldMarka.getText(), jTextFieldAksesuar.getText(), jEditorPaneProblem.getText(), conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Netice,
+                    jEditorPaneQeyd.getText(), conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Date, conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).isActive,
+                    Date, conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).DateTemir,
+                    conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).DateTehvil, conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).GY));
+        } catch (NumberFormatException e) {
+            conn.DaxilOlanInsertUpdate(new DaxilOlan(Integer.parseInt(jTextFieldID.getText()), jTextFieldAd.getText(), jTextFieldSoyad.getText(),
+                    jTextFieldTelefon.getText(), DaxilOlanNov.idDaxilOlanNov, jTextFieldModel.getText(),
+                    jTextFieldMarka.getText(), jTextFieldAksesuar.getText(), jEditorPaneProblem.getText(), conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Netice,
+                    jEditorPaneQeyd.getText(), conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).Date, conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).isActive,
+                    conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).DatePlan, conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).DateTemir,
+                    conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).DateTehvil, conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan).GY));
         }
-        d.setDateTemir(S.getIdDaxilOlan().getDateTemir());
-        d.setDateTehvil(S.getIdDaxilOlan().getDateTehvil());
-        d.setGy(S.getIdDaxilOlan().getGy());
-        em.merge(d);
-        em.getTransaction().begin();
-        em.getTransaction().commit();
         this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
 

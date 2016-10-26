@@ -12,6 +12,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -25,10 +27,9 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "tehvil")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Tehvil.findAll", query = "SELECT t FROM Tehvil t"),
-    @NamedQuery(name = "Tehvil.findByIdTehvil", query = "SELECT t FROM Tehvil t WHERE t.idTehvil = :idTehvil"),
-    @NamedQuery(name = "Tehvil.findByIdMutexesis", query = "SELECT t FROM Tehvil t WHERE t.idMutexesis = :idMutexesis"),
-    @NamedQuery(name = "Tehvil.findByIdDaxilOlan", query = "SELECT t FROM Tehvil t WHERE t.idDaxilOlan = :idDaxilOlan")})
+    @NamedQuery(name = "Tehvil.findAll", query = "SELECT t FROM Tehvil t")
+    , @NamedQuery(name = "Tehvil.findByIdMutexesisler", query = "SELECT t FROM Tehvil t WHERE t.idMutexesis = :idMutexesis")
+    , @NamedQuery(name = "Tehvil.findByIdTehvil", query = "SELECT t FROM Tehvil t WHERE t.idTehvil = :idTehvil")})
 public class Tehvil implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -37,24 +38,18 @@ public class Tehvil implements Serializable {
     @Basic(optional = false)
     @Column(name = "idTehvil")
     private Integer idTehvil;
-    @Basic(optional = false)
-    @Column(name = "idMutexesis")
-    private String idMutexesis;
-    @Basic(optional = false)
-    @Column(name = "idDaxilOlan")
-    private String idDaxilOlan;
+    @JoinColumn(name = "idMutexesis", referencedColumnName = "idMutexesisler")
+    @ManyToOne(optional = false)
+    private Mutexesisler idMutexesis;
+    @JoinColumn(name = "idDaxilOlan", referencedColumnName = "idDaxilOlan")
+    @ManyToOne(optional = false)
+    private Daxilolan idDaxilOlan;
 
     public Tehvil() {
     }
 
     public Tehvil(Integer idTehvil) {
         this.idTehvil = idTehvil;
-    }
-
-    public Tehvil(Integer idTehvil, String idMutexesis, String idDaxilOlan) {
-        this.idTehvil = idTehvil;
-        this.idMutexesis = idMutexesis;
-        this.idDaxilOlan = idDaxilOlan;
     }
 
     public Integer getIdTehvil() {
@@ -65,19 +60,19 @@ public class Tehvil implements Serializable {
         this.idTehvil = idTehvil;
     }
 
-    public String getIdMutexesis() {
+    public Mutexesisler getIdMutexesis() {
         return idMutexesis;
     }
 
-    public void setIdMutexesis(String idMutexesis) {
+    public void setIdMutexesis(Mutexesisler idMutexesis) {
         this.idMutexesis = idMutexesis;
     }
 
-    public String getIdDaxilOlan() {
+    public Daxilolan getIdDaxilOlan() {
         return idDaxilOlan;
     }
 
-    public void setIdDaxilOlan(String idDaxilOlan) {
+    public void setIdDaxilOlan(Daxilolan idDaxilOlan) {
         this.idDaxilOlan = idDaxilOlan;
     }
 

@@ -41,6 +41,11 @@ import javax.xml.bind.annotation.XmlTransient;
     @NamedQuery(name = "Mutexesisler.findByIsActive", query = "SELECT m FROM Mutexesisler m WHERE m.isActive = :isActive")})
 public class Mutexesisler implements Serializable {
 
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "idMutexesis")
+    private Collection<Tehvil> tehvilCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "idMutexesis")
+    private Collection<Temir> temirCollection;
+
     @Transient
     private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
@@ -184,6 +189,24 @@ public class Mutexesisler implements Serializable {
 
     public void removePropertyChangeListener(PropertyChangeListener listener) {
         changeSupport.removePropertyChangeListener(listener);
+    }
+
+    @XmlTransient
+    public Collection<Tehvil> getTehvilCollection() {
+        return tehvilCollection;
+    }
+
+    public void setTehvilCollection(Collection<Tehvil> tehvilCollection) {
+        this.tehvilCollection = tehvilCollection;
+    }
+
+    @XmlTransient
+    public Collection<Temir> getTemirCollection() {
+        return temirCollection;
+    }
+
+    public void setTemirCollection(Collection<Temir> temirCollection) {
+        this.temirCollection = temirCollection;
     }
     
 }

@@ -12,6 +12,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
@@ -25,10 +27,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "temir")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Temir.findAll", query = "SELECT t FROM Temir t"),
-    @NamedQuery(name = "Temir.findByIdTemir", query = "SELECT t FROM Temir t WHERE t.idTemir = :idTemir"),
-    @NamedQuery(name = "Temir.findByIdMutexesis", query = "SELECT t FROM Temir t WHERE t.idMutexesis = :idMutexesis"),
-    @NamedQuery(name = "Temir.findByIdDaxilOlan", query = "SELECT t FROM Temir t WHERE t.idDaxilOlan = :idDaxilOlan")})
+    @NamedQuery(name = "Temir.findAll", query = "SELECT t FROM Temir t")
+    , @NamedQuery(name = "Temir.findByIdMutexesisler", query = "SELECT t FROM Temir t WHERE t.idMutexesis = :idMutexesis")
+    , @NamedQuery(name = "Temir.findByIdTemir", query = "SELECT t FROM Temir t WHERE t.idTemir = :idTemir")
+})
 public class Temir implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -37,24 +39,18 @@ public class Temir implements Serializable {
     @Basic(optional = false)
     @Column(name = "idTemir")
     private Integer idTemir;
-    @Basic(optional = false)
-    @Column(name = "idMutexesis")
-    private String idMutexesis;
-    @Basic(optional = false)
-    @Column(name = "idDaxilOlan")
-    private String idDaxilOlan;
+    @JoinColumn(name = "idMutexesis", referencedColumnName = "idMutexesisler")
+    @ManyToOne(optional = false)
+    private Mutexesisler idMutexesis;
+    @JoinColumn(name = "idDaxilOlan", referencedColumnName = "idDaxilOlan")
+    @ManyToOne(optional = false)
+    private Daxilolan idDaxilOlan;
 
     public Temir() {
     }
 
     public Temir(Integer idTemir) {
         this.idTemir = idTemir;
-    }
-
-    public Temir(Integer idTemir, String idMutexesis, String idDaxilOlan) {
-        this.idTemir = idTemir;
-        this.idMutexesis = idMutexesis;
-        this.idDaxilOlan = idDaxilOlan;
     }
 
     public Integer getIdTemir() {
@@ -65,19 +61,19 @@ public class Temir implements Serializable {
         this.idTemir = idTemir;
     }
 
-    public String getIdMutexesis() {
+    public Mutexesisler getIdMutexesis() {
         return idMutexesis;
     }
 
-    public void setIdMutexesis(String idMutexesis) {
+    public void setIdMutexesis(Mutexesisler idMutexesis) {
         this.idMutexesis = idMutexesis;
     }
 
-    public String getIdDaxilOlan() {
+    public Daxilolan getIdDaxilOlan() {
         return idDaxilOlan;
     }
 
-    public void setIdDaxilOlan(String idDaxilOlan) {
+    public void setIdDaxilOlan(Daxilolan idDaxilOlan) {
         this.idDaxilOlan = idDaxilOlan;
     }
 

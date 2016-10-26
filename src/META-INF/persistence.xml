@@ -2,19 +2,19 @@
 <persistence version="2.1" xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
   <persistence-unit name="TexnoUSTA_ClientPU" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
-    <class>Entity.Detal</class>
-    <class>Entity.Daxilolannov</class>
     <class>Entity.Mutexesisler</class>
+    <class>Entity.Daxilolan</class>
+    <class>Entity.Daxilolannov</class>
+    <class>Entity.Detal</class>
+    <class>Entity.Detallar</class>
     <class>Entity.Kassa</class>
     <class>Entity.Kataloq</class>
-    <class>Entity.Login</class>
-    <class>Entity.Tehvil</class>
-    <class>Entity.Detallar</class>
     <class>Entity.Kataloqnovu</class>
-    <class>Entity.Temir</class>
-    <class>Entity.Daxilolan</class>
-    <class>Entity.Print</class>
+    <class>Entity.Login</class>
     <class>Entity.Mutexesiswork</class>
+    <class>Entity.Print</class>
+    <class>Entity.Tehvil</class>
+    <class>Entity.Temir</class>
     <properties>
       <property name="javax.persistence.jdbc.url" value="jdbc:mysql://192.168.1.103:3306/texnousta?zeroDateTimeBehavior=convertToNull"/>
       <property name="javax.persistence.jdbc.user" value="root"/>

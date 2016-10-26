@@ -5,6 +5,8 @@
  */
 package Entity;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
@@ -15,6 +17,7 @@ import javax.persistence.Id;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
+import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -29,6 +32,9 @@ import javax.xml.bind.annotation.XmlRootElement;
     @NamedQuery(name = "Daxilolannov.findByIdDaxilOlanNov", query = "SELECT d FROM Daxilolannov d WHERE d.idDaxilOlanNov = :idDaxilOlanNov"),
     @NamedQuery(name = "Daxilolannov.findByAd", query = "SELECT d FROM Daxilolannov d WHERE d.ad = :ad")})
 public class Daxilolannov implements Serializable {
+
+    @Transient
+    private PropertyChangeSupport changeSupport = new PropertyChangeSupport(this);
 
     private static final long serialVersionUID = 1L;
     @Id
@@ -57,7 +63,9 @@ public class Daxilolannov implements Serializable {
     }
 
     public void setIdDaxilOlanNov(Integer idDaxilOlanNov) {
+        Integer oldIdDaxilOlanNov = this.idDaxilOlanNov;
         this.idDaxilOlanNov = idDaxilOlanNov;
+        changeSupport.firePropertyChange("idDaxilOlanNov", oldIdDaxilOlanNov, idDaxilOlanNov);
     }
 
     public String getAd() {
@@ -65,7 +73,9 @@ public class Daxilolannov implements Serializable {
     }
 
     public void setAd(String ad) {
+        String oldAd = this.ad;
         this.ad = ad;
+        changeSupport.firePropertyChange("ad", oldAd, ad);
     }
 
     @Override
@@ -91,6 +101,14 @@ public class Daxilolannov implements Serializable {
     @Override
     public String toString() {
         return "Entity.Daxilolannov[ idDaxilOlanNov=" + idDaxilOlanNov + " ]";
+    }
+
+    public void addPropertyChangeListener(PropertyChangeListener listener) {
+        changeSupport.addPropertyChangeListener(listener);
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        changeSupport.removePropertyChangeListener(listener);
     }
     
 }

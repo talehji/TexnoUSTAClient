@@ -8,6 +8,7 @@ package Screens;
 import Entity.Daxilolan;
 import Entity.Mutexesiswork;
 import Entity.Kassa;
+import Entity.Mutexesisler;
 import Entity.Temir;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -187,8 +188,8 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         em.getTransaction().commit();
         
         Temir t = new Temir(0);
-        t.setIdDaxilOlan(S.getIdDaxilOlan().getIdDaxilOlan().toString());
-        t.setIdMutexesis(S.getIdMutexesisler().getIdMutexesisler().toString());
+        t.setIdDaxilOlan(em.find(Daxilolan.class, S.getIdDaxilOlan().getIdDaxilOlan()));
+        t.setIdMutexesis(em.find(Mutexesisler.class, S.getIdMutexesisler().getIdMutexesisler()));
         em.merge(t);
         em.getTransaction().begin();
         em.getTransaction().commit();

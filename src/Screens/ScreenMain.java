@@ -1,9 +1,14 @@
 package Screens;
 
+import ConnectionDB.ConnMySql;
 import Entity.Daxilolan;
+import Entity.Daxilolannov;
 import Entity.Login;
 import Entity.Mutexesisler;
 import Entity.Mutexesiswork;
+import Entity.Tehvil;
+import Entity.Temir;
+import Object.MutexesisWork;
 import java.awt.Font;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -22,14 +27,18 @@ public final class ScreenMain extends javax.swing.JFrame {
     private final EntityManager em;
 
     Login l;
-    private List<Mutexesiswork> ListOfMutexesislerWork;
     private final EntityManagerFactory emf;
     private final Mutexesisler Mutexesis;
+    private final ConnMySql conn;
+    private List<MutexesisWork> ListOfMutexesislerWork;
 
     public ScreenMain(Login l) {
         initComponents();
         this.setExtendedState(ScreenMain.MAXIMIZED_BOTH);
         this.l = l;
+
+        conn = new ConnMySql();
+
         emf = Persistence.createEntityManagerFactory("TexnoUSTA_ClientPU");
         em = emf.createEntityManager();
 
@@ -37,8 +46,6 @@ public final class ScreenMain extends javax.swing.JFrame {
                 .setParameter("idMutexesisler", l.getIdMutexesis())
                 .getSingleResult();
         jMenuMember.setText(Mutexesis.getAd() + " " + Mutexesis.getSoyad());
-
-        Refresh();
 
         new Thread() {
             @Override
@@ -61,12 +68,12 @@ public final class ScreenMain extends javax.swing.JFrame {
                 }
             }
         }.start();
+
+        Refresh();
     }
 
     public void Refresh() {
-        ListOfMutexesislerWork = em.createNamedQuery("Mutexesiswork.findByIdMutexesis", Mutexesiswork.class)
-                .setParameter("idMutexesisler", em.find(Mutexesisler.class, l.getIdMutexesis()))
-                .getResultList();
+        ListOfMutexesislerWork = conn.MutexesisWorkFindByIdMutexesisler(l.getIdMutexesis());
         FillTheTableGonderilen();
         FillTheTableAnakart();
         FillTheTableSadeDetalProblemi();
@@ -74,6 +81,78 @@ public final class ScreenMain extends javax.swing.JFrame {
         FillTheTableMusteridencavab();
         FillTheTabledetalGozleyir();
         FillTheTableTemiriMumkunsuz();
+        FillTheTableKuryerPlataAxtarsin();
+        FillTheTableDiaqostika();
+        FillTheTableTehvilVerdiklerim();
+        FillTheTableTemirEtdiklerim();
+    }
+
+    private void FillTheTableTemirEtdiklerim() {
+        DefaultTableModel tmodel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+        };
+        tmodel.addColumn("ID");
+        tmodel.addColumn("Ad Soyad");
+        tmodel.addColumn("Daxil Olan");
+        tmodel.addColumn("Model Marka");
+        tmodel.addColumn("Tarix");
+
+        jTableTemir.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTableTemir.setRowHeight(20);
+        jTableTemir.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        jTableTemir.setModel(tmodel);
+        List<Temir> ListOfTemir = em.createNamedQuery("Temir.findByIdMutexesisler", Temir.class)
+                .setParameter("idMutexesis", em.find(Mutexesisler.class, l.getIdMutexesis()))
+                .getResultList();
+        ListOfTemir.stream().forEach((b) -> {
+            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+
+            tmodel.insertRow(jTableTemir.getRowCount(), new Object[]{
+                b.getIdDaxilOlan().getIdDaxilOlan(),
+                b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
+                em.find(Daxilolannov.class, Integer.parseInt(b.getIdDaxilOlan().getIdDaxilOlanNov())).getAd(),
+                b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
+                b.getIdDaxilOlan().getDateTehvil(),});
+        });
+    }
+
+    private void FillTheTableTehvilVerdiklerim() {
+        DefaultTableModel tmodel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+        };
+        tmodel.addColumn("ID");
+        tmodel.addColumn("Ad Soyad");
+        tmodel.addColumn("Daxil Olan");
+        tmodel.addColumn("Model Marka");
+        tmodel.addColumn("Tarix");
+
+        jTableğTehvil.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTableğTehvil.setRowHeight(20);
+        jTableğTehvil.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        jTableğTehvil.setModel(tmodel);
+        List<Tehvil> ListOfTehvil = em.createNamedQuery("Tehvil.findByIdMutexesisler", Tehvil.class)
+                .setParameter("idMutexesis", em.find(Mutexesisler.class, l.getIdMutexesis()))
+                .getResultList();
+        ListOfTehvil.stream().forEach((b) -> {
+            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+
+            tmodel.insertRow(jTableğTehvil.getRowCount(), new Object[]{
+                b.getIdDaxilOlan().getIdDaxilOlan(),
+                b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
+                em.find(Daxilolannov.class, Integer.parseInt(b.getIdDaxilOlan().getIdDaxilOlanNov())).getAd(),
+                b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
+                b.getIdDaxilOlan().getDateTehvil(),});
+        });
     }
 
     private void FillTheTableGonderilen() {
@@ -103,18 +182,20 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("1")) {
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("1")) {
+
                     tmodel.insertRow(jTable1.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -147,18 +228,20 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("3")) {
-                    tmodel.insertRow(jTableAnakart.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("3")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -191,18 +274,20 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("4")) {
-                    tmodel.insertRow(jTableSadedetalProblemi.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("4")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -235,18 +320,20 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("5")) {
-                    tmodel.insertRow(jTableProqramTeminati.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("5")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -279,18 +366,20 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("6")) {
-                    tmodel.insertRow(jTableMusteridenCavab.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("6")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -323,18 +412,20 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("7")) {
-                    tmodel.insertRow(jTableDetalGozleyir.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("7")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -367,18 +458,112 @@ public final class ScreenMain extends javax.swing.JFrame {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
 
-            if (b.getIdDaxilOlan().getIsActive().equals("6")) {
-                if (b.getStatus().equals("8")) {
-                    tmodel.insertRow(jTableTemiriMumkunsuz.getRowCount(), new Object[]{
-                        b.getIdMutexesisWork(),
-                        b.getIdDaxilOlan().getIdDaxilOlan(),
-                        b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                        b.getIdDaxilOlan().getTelefon(),
-                        b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                        b.getIdMutexesisler().getAd() + " " + b.getIdMutexesisler().getSoyad(),
-                        b.getIdDaxilOlan().getDatePlan(),
-                        d.format(b.getDate()),
-                        s.format(b.getDate()),});
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("8")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
+                }
+            }
+        });
+    }
+
+    private void FillTheTableKuryerPlataAxtarsin() {
+        DefaultTableModel tmodel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+        };
+        tmodel.addColumn("ID");
+        tmodel.addColumn("ID Daxil Olan");
+        tmodel.addColumn("Ad");
+        tmodel.addColumn("Telefon");
+        tmodel.addColumn("Model Marka");
+        tmodel.addColumn("Mütəxəsis");
+        tmodel.addColumn("Planlaşdırılmış Tarix");
+        tmodel.addColumn("Tapşırıq Tarixi");
+        tmodel.addColumn("Saatı");
+
+        jTableKuryerPlataAxtarsin.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTableKuryerPlataAxtarsin.setRowHeight(20);
+        jTableKuryerPlataAxtarsin.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        jTableKuryerPlataAxtarsin.setModel(tmodel);
+
+        ListOfMutexesislerWork.stream().forEach((b) -> {
+            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("9")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
+                }
+            }
+        });
+    }
+
+    private void FillTheTableDiaqostika() {
+        DefaultTableModel tmodel = new DefaultTableModel() {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+
+        };
+        tmodel.addColumn("ID");
+        tmodel.addColumn("ID Daxil Olan");
+        tmodel.addColumn("Ad");
+        tmodel.addColumn("Telefon");
+        tmodel.addColumn("Model Marka");
+        tmodel.addColumn("Mütəxəsis");
+        tmodel.addColumn("Planlaşdırılmış Tarix");
+        tmodel.addColumn("Tapşırıq Tarixi");
+        tmodel.addColumn("Saatı");
+
+        jTableDiaqnostika.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        jTableDiaqnostika.setRowHeight(20);
+        jTableDiaqnostika.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        jTableDiaqnostika.setModel(tmodel);
+
+        ListOfMutexesislerWork.stream().forEach((b) -> {
+            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+
+            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+                if (b.Status.equals("10")) {
+
+                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                        b.IdMutexesisWork,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
+                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
+                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
+                        d.format(b.Date),
+                        s.format(b.Date)
+                    });
                 }
             }
         });
@@ -395,6 +580,9 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat5 = new javax.swing.JMenuItem();
         jMenuItemCetineat6 = new javax.swing.JMenuItem();
         jMenuItemCetineat7 = new javax.swing.JMenuItem();
+        jMenuItemCetineat38 = new javax.swing.JMenuItem();
+        jMenuItemCetineat39 = new javax.swing.JMenuItem();
+        jMenuItem16 = new javax.swing.JMenuItem();
         jPopupMenuAnakart = new javax.swing.JPopupMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
         jMenuItemCetineat8 = new javax.swing.JMenuItem();
@@ -402,6 +590,9 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat10 = new javax.swing.JMenuItem();
         jMenuItemCetineat11 = new javax.swing.JMenuItem();
         jMenuItemCetineat12 = new javax.swing.JMenuItem();
+        jMenuItemCetineat40 = new javax.swing.JMenuItem();
+        jMenuItemCetineat41 = new javax.swing.JMenuItem();
+        jMenuItem17 = new javax.swing.JMenuItem();
         jPopupMenuSadedetalProblemi = new javax.swing.JPopupMenu();
         jMenuItemCetineat1 = new javax.swing.JMenuItem();
         jMenuItemCetineat13 = new javax.swing.JMenuItem();
@@ -409,6 +600,9 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat15 = new javax.swing.JMenuItem();
         jMenuItemCetineat16 = new javax.swing.JMenuItem();
         jMenuItemCetineat17 = new javax.swing.JMenuItem();
+        jMenuItemCetineat42 = new javax.swing.JMenuItem();
+        jMenuItemCetineat43 = new javax.swing.JMenuItem();
+        jMenuItem18 = new javax.swing.JMenuItem();
         jPopupMenuProqramTeminati = new javax.swing.JPopupMenu();
         jMenuItem2 = new javax.swing.JMenuItem();
         jMenuItemCetineat18 = new javax.swing.JMenuItem();
@@ -416,6 +610,9 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat20 = new javax.swing.JMenuItem();
         jMenuItemCetineat21 = new javax.swing.JMenuItem();
         jMenuItemCetineat22 = new javax.swing.JMenuItem();
+        jMenuItemCetineat44 = new javax.swing.JMenuItem();
+        jMenuItemCetineat45 = new javax.swing.JMenuItem();
+        jMenuItem19 = new javax.swing.JMenuItem();
         jPopupMenuMusteridenCavab = new javax.swing.JPopupMenu();
         jMenuItemCetineat2 = new javax.swing.JMenuItem();
         jMenuItemCetineat23 = new javax.swing.JMenuItem();
@@ -423,6 +620,9 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat25 = new javax.swing.JMenuItem();
         jMenuItemCetineat26 = new javax.swing.JMenuItem();
         jMenuItemCetineat27 = new javax.swing.JMenuItem();
+        jMenuItemCetineat46 = new javax.swing.JMenuItem();
+        jMenuItemCetineat47 = new javax.swing.JMenuItem();
+        jMenuItem20 = new javax.swing.JMenuItem();
         jPopupMenuDetalGozleyir = new javax.swing.JPopupMenu();
         jMenuItem3 = new javax.swing.JMenuItem();
         jMenuItemCetineat28 = new javax.swing.JMenuItem();
@@ -430,6 +630,9 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat30 = new javax.swing.JMenuItem();
         jMenuItemCetineat31 = new javax.swing.JMenuItem();
         jMenuItemCetineat32 = new javax.swing.JMenuItem();
+        jMenuItemCetineat48 = new javax.swing.JMenuItem();
+        jMenuItemCetineat49 = new javax.swing.JMenuItem();
+        jMenuItem21 = new javax.swing.JMenuItem();
         jPopupMenuTemiriMumkunsuz = new javax.swing.JPopupMenu();
         jMenuItem4 = new javax.swing.JMenuItem();
         jMenuItemCetineat33 = new javax.swing.JMenuItem();
@@ -437,6 +640,29 @@ public final class ScreenMain extends javax.swing.JFrame {
         jMenuItemCetineat35 = new javax.swing.JMenuItem();
         jMenuItemCetineat36 = new javax.swing.JMenuItem();
         jMenuItemCetineat37 = new javax.swing.JMenuItem();
+        jMenuItemCetineat50 = new javax.swing.JMenuItem();
+        jMenuItemCetineat51 = new javax.swing.JMenuItem();
+        jMenuItem22 = new javax.swing.JMenuItem();
+        jPopupMenuKuryerPlataAxtarsin = new javax.swing.JPopupMenu();
+        jMenuItem14 = new javax.swing.JMenuItem();
+        jMenuItemCetineat52 = new javax.swing.JMenuItem();
+        jMenuItemCetineat53 = new javax.swing.JMenuItem();
+        jMenuItemCetineat54 = new javax.swing.JMenuItem();
+        jMenuItemCetineat55 = new javax.swing.JMenuItem();
+        jMenuItemCetineat56 = new javax.swing.JMenuItem();
+        jMenuItemCetineat57 = new javax.swing.JMenuItem();
+        jMenuItemCetineat58 = new javax.swing.JMenuItem();
+        jMenuItem23 = new javax.swing.JMenuItem();
+        jPopupMenuDiaqnostika = new javax.swing.JPopupMenu();
+        jMenuItem15 = new javax.swing.JMenuItem();
+        jMenuItemCetineat59 = new javax.swing.JMenuItem();
+        jMenuItemCetineat60 = new javax.swing.JMenuItem();
+        jMenuItemCetineat61 = new javax.swing.JMenuItem();
+        jMenuItemCetineat62 = new javax.swing.JMenuItem();
+        jMenuItemCetineat63 = new javax.swing.JMenuItem();
+        jMenuItemCetineat64 = new javax.swing.JMenuItem();
+        jMenuItemCetineat65 = new javax.swing.JMenuItem();
+        jMenuItem24 = new javax.swing.JMenuItem();
         jToolBar1 = new javax.swing.JToolBar();
         jButton8 = new javax.swing.JButton();
         jButton11 = new javax.swing.JButton();
@@ -465,6 +691,18 @@ public final class ScreenMain extends javax.swing.JFrame {
         jPanel7 = new javax.swing.JPanel();
         jScrollPane7 = new javax.swing.JScrollPane();
         jTableTemiriMumkunsuz = new javax.swing.JTable();
+        jPanel8 = new javax.swing.JPanel();
+        jScrollPane11 = new javax.swing.JScrollPane();
+        jTableKuryerPlataAxtarsin = new javax.swing.JTable();
+        jPanel9 = new javax.swing.JPanel();
+        jScrollPane10 = new javax.swing.JScrollPane();
+        jTableDiaqnostika = new javax.swing.JTable();
+        jPanel11 = new javax.swing.JPanel();
+        jScrollPane9 = new javax.swing.JScrollPane();
+        jTableTemir = new javax.swing.JTable();
+        jPanel10 = new javax.swing.JPanel();
+        jScrollPane8 = new javax.swing.JScrollPane();
+        jTableğTehvil = new javax.swing.JTable();
         jLabelTarixsaat = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -536,6 +774,33 @@ public final class ScreenMain extends javax.swing.JFrame {
         });
         jPopupMenuTapşırıq.add(jMenuItemCetineat7);
 
+        jMenuItemCetineat38.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat38.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat38.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat38ActionPerformed(evt);
+            }
+        });
+        jPopupMenuTapşırıq.add(jMenuItemCetineat38);
+
+        jMenuItemCetineat39.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat39.setText("Diaqnostika");
+        jMenuItemCetineat39.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat39ActionPerformed(evt);
+            }
+        });
+        jPopupMenuTapşırıq.add(jMenuItemCetineat39);
+
+        jMenuItem16.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem16.setText("Təmir etdim");
+        jMenuItem16.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem16ActionPerformed(evt);
+            }
+        });
+        jPopupMenuTapşırıq.add(jMenuItem16);
+
         jMenuItem1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jMenuItem1.setText("Tapşırığa yönəlt");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
@@ -589,6 +854,33 @@ public final class ScreenMain extends javax.swing.JFrame {
             }
         });
         jPopupMenuAnakart.add(jMenuItemCetineat12);
+
+        jMenuItemCetineat40.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat40.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat40.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat40ActionPerformed(evt);
+            }
+        });
+        jPopupMenuAnakart.add(jMenuItemCetineat40);
+
+        jMenuItemCetineat41.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat41.setText("Diaqnostika");
+        jMenuItemCetineat41.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat41ActionPerformed(evt);
+            }
+        });
+        jPopupMenuAnakart.add(jMenuItemCetineat41);
+
+        jMenuItem17.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem17.setText("Təmir etdim");
+        jMenuItem17.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem17ActionPerformed(evt);
+            }
+        });
+        jPopupMenuAnakart.add(jMenuItem17);
 
         jMenuItemCetineat1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jMenuItemCetineat1.setText("Tapşırığa yönəlt");
@@ -644,6 +936,33 @@ public final class ScreenMain extends javax.swing.JFrame {
         });
         jPopupMenuSadedetalProblemi.add(jMenuItemCetineat17);
 
+        jMenuItemCetineat42.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat42.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat42.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat42ActionPerformed(evt);
+            }
+        });
+        jPopupMenuSadedetalProblemi.add(jMenuItemCetineat42);
+
+        jMenuItemCetineat43.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat43.setText("Diaqnostika");
+        jMenuItemCetineat43.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat43ActionPerformed(evt);
+            }
+        });
+        jPopupMenuSadedetalProblemi.add(jMenuItemCetineat43);
+
+        jMenuItem18.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem18.setText("Təmir etdim");
+        jMenuItem18.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem18ActionPerformed(evt);
+            }
+        });
+        jPopupMenuSadedetalProblemi.add(jMenuItem18);
+
         jMenuItem2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jMenuItem2.setText("Tapşırığa yönəlt");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
@@ -697,6 +1016,33 @@ public final class ScreenMain extends javax.swing.JFrame {
             }
         });
         jPopupMenuProqramTeminati.add(jMenuItemCetineat22);
+
+        jMenuItemCetineat44.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat44.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat44.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat44ActionPerformed(evt);
+            }
+        });
+        jPopupMenuProqramTeminati.add(jMenuItemCetineat44);
+
+        jMenuItemCetineat45.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat45.setText("Diaqnostika");
+        jMenuItemCetineat45.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat45ActionPerformed(evt);
+            }
+        });
+        jPopupMenuProqramTeminati.add(jMenuItemCetineat45);
+
+        jMenuItem19.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem19.setText("Təmir etdim");
+        jMenuItem19.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem19ActionPerformed(evt);
+            }
+        });
+        jPopupMenuProqramTeminati.add(jMenuItem19);
 
         jMenuItemCetineat2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jMenuItemCetineat2.setText("Tapşırığa yönəlt");
@@ -752,6 +1098,33 @@ public final class ScreenMain extends javax.swing.JFrame {
         });
         jPopupMenuMusteridenCavab.add(jMenuItemCetineat27);
 
+        jMenuItemCetineat46.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat46.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat46.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat46ActionPerformed(evt);
+            }
+        });
+        jPopupMenuMusteridenCavab.add(jMenuItemCetineat46);
+
+        jMenuItemCetineat47.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat47.setText("Diaqnostika");
+        jMenuItemCetineat47.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat47ActionPerformed(evt);
+            }
+        });
+        jPopupMenuMusteridenCavab.add(jMenuItemCetineat47);
+
+        jMenuItem20.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem20.setText("Təmir etdim");
+        jMenuItem20.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem20ActionPerformed(evt);
+            }
+        });
+        jPopupMenuMusteridenCavab.add(jMenuItem20);
+
         jMenuItem3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jMenuItem3.setText("Tapşırığa yönəlt");
         jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
@@ -806,6 +1179,33 @@ public final class ScreenMain extends javax.swing.JFrame {
         });
         jPopupMenuDetalGozleyir.add(jMenuItemCetineat32);
 
+        jMenuItemCetineat48.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat48.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat48.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat48ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDetalGozleyir.add(jMenuItemCetineat48);
+
+        jMenuItemCetineat49.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat49.setText("Diaqnostika");
+        jMenuItemCetineat49.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat49ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDetalGozleyir.add(jMenuItemCetineat49);
+
+        jMenuItem21.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem21.setText("Təmir etdim");
+        jMenuItem21.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem21ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDetalGozleyir.add(jMenuItem21);
+
         jMenuItem4.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
         jMenuItem4.setText("Tapşırığa yönəlt");
         jMenuItem4.addActionListener(new java.awt.event.ActionListener() {
@@ -859,6 +1259,195 @@ public final class ScreenMain extends javax.swing.JFrame {
             }
         });
         jPopupMenuTemiriMumkunsuz.add(jMenuItemCetineat37);
+
+        jMenuItemCetineat50.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat50.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat50.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat50ActionPerformed(evt);
+            }
+        });
+        jPopupMenuTemiriMumkunsuz.add(jMenuItemCetineat50);
+
+        jMenuItemCetineat51.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat51.setText("Diaqnostika");
+        jMenuItemCetineat51.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat51ActionPerformed(evt);
+            }
+        });
+        jPopupMenuTemiriMumkunsuz.add(jMenuItemCetineat51);
+
+        jMenuItem22.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem22.setText("Təmir etdim");
+        jMenuItem22.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem22ActionPerformed(evt);
+            }
+        });
+        jPopupMenuTemiriMumkunsuz.add(jMenuItem22);
+
+        jMenuItem14.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem14.setText("Tapşırığa yönəlt");
+        jMenuItem14.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem14ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItem14);
+
+        jMenuItemCetineat52.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat52.setText("Ana Kart");
+        jMenuItemCetineat52.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat52ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat52);
+
+        jMenuItemCetineat53.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat53.setText("Sadə detal problemi");
+        jMenuItemCetineat53.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat53ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat53);
+
+        jMenuItemCetineat54.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat54.setText("Proqram Təminatı");
+        jMenuItemCetineat54.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat54ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat54);
+
+        jMenuItemCetineat55.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat55.setText("Müştəridən cavab");
+        jMenuItemCetineat55.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat55ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat55);
+
+        jMenuItemCetineat56.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat56.setText("Detal Gözləyir");
+        jMenuItemCetineat56.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat56ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat56);
+
+        jMenuItemCetineat57.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat57.setText("Təmiri mümkünsüz");
+        jMenuItemCetineat57.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat57ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat57);
+
+        jMenuItemCetineat58.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat58.setText("Diaqnostika");
+        jMenuItemCetineat58.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat58ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItemCetineat58);
+
+        jMenuItem23.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem23.setText("Təmir etdim");
+        jMenuItem23.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem23ActionPerformed(evt);
+            }
+        });
+        jPopupMenuKuryerPlataAxtarsin.add(jMenuItem23);
+
+        jMenuItem15.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem15.setText("Tapşırığa yönəlt");
+        jMenuItem15.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem15ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItem15);
+
+        jMenuItemCetineat59.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat59.setText("Ana Kart");
+        jMenuItemCetineat59.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat59ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat59);
+
+        jMenuItemCetineat60.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat60.setText("Sadə detal problemi");
+        jMenuItemCetineat60.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat60ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat60);
+
+        jMenuItemCetineat61.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat61.setText("Proqram Təminatı");
+        jMenuItemCetineat61.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat61ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat61);
+
+        jMenuItemCetineat62.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat62.setText("Müştəridən cavab");
+        jMenuItemCetineat62.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat62ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat62);
+
+        jMenuItemCetineat63.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat63.setText("Detal gözləyir");
+        jMenuItemCetineat63.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat63ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat63);
+
+        jMenuItemCetineat64.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat64.setText("Təmiri mümkünsüz");
+        jMenuItemCetineat64.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat64ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat64);
+
+        jMenuItemCetineat65.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItemCetineat65.setText("Kuryer plata axtarsın");
+        jMenuItemCetineat65.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItemCetineat65ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItemCetineat65);
+
+        jMenuItem24.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
+        jMenuItem24.setText("Təmir etdim");
+        jMenuItem24.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem24ActionPerformed(evt);
+            }
+        });
+        jPopupMenuDiaqnostika.add(jMenuItem24);
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -925,6 +1514,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         });
         jToolBar1.add(jButton6);
 
+        jTabbedPane1.setTabLayoutPolicy(javax.swing.JTabbedPane.SCROLL_TAB_LAYOUT);
+        jTabbedPane1.setTabPlacement(javax.swing.JTabbedPane.LEFT);
         jTabbedPane1.setToolTipText("");
         jTabbedPane1.setFont(new java.awt.Font("Tahoma", 0, 14)); // NOI18N
 
@@ -951,14 +1542,14 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -987,14 +1578,14 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1023,14 +1614,14 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel3Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1059,14 +1650,14 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel4Layout.setVerticalGroup(
             jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel4Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1095,14 +1686,14 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel5Layout.setVerticalGroup(
             jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel5Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane5, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1131,14 +1722,14 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel6Layout.setVerticalGroup(
             jPanel6Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel6Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane6, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
@@ -1167,18 +1758,146 @@ public final class ScreenMain extends javax.swing.JFrame {
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 915, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
                 .addContainerGap())
         );
         jPanel7Layout.setVerticalGroup(
             jPanel7Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel7Layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 433, Short.MAX_VALUE)
+                .addComponent(jScrollPane7, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jTabbedPane1.addTab("  Təmiri mümkünsüz  ", jPanel7);
+
+        jTableKuryerPlataAxtarsin.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jTableKuryerPlataAxtarsin.setComponentPopupMenu(jPopupMenuKuryerPlataAxtarsin);
+        jTableKuryerPlataAxtarsin.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTableKuryerPlataAxtarsinMouseClicked(evt);
+            }
+        });
+        jScrollPane11.setViewportView(jTableKuryerPlataAxtarsin);
+
+        javax.swing.GroupLayout jPanel8Layout = new javax.swing.GroupLayout(jPanel8);
+        jPanel8.setLayout(jPanel8Layout);
+        jPanel8Layout.setHorizontalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane11, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel8Layout.setVerticalGroup(
+            jPanel8Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel8Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane11, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Kuryer Detal Axtarsın", jPanel8);
+
+        jTableDiaqnostika.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jTableDiaqnostika.setComponentPopupMenu(jPopupMenuDiaqnostika);
+        jTableDiaqnostika.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTableDiaqnostikaMouseClicked(evt);
+            }
+        });
+        jScrollPane10.setViewportView(jTableDiaqnostika);
+
+        javax.swing.GroupLayout jPanel9Layout = new javax.swing.GroupLayout(jPanel9);
+        jPanel9.setLayout(jPanel9Layout);
+        jPanel9Layout.setHorizontalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel9Layout.setVerticalGroup(
+            jPanel9Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel9Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane10, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Diaqnostika", jPanel9);
+
+        jTableTemir.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jScrollPane9.setViewportView(jTableTemir);
+
+        javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
+        jPanel11.setLayout(jPanel11Layout);
+        jPanel11Layout.setHorizontalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel11Layout.setVerticalGroup(
+            jPanel11Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel11Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane9, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Təmir etdiklərim", jPanel11);
+
+        jTableğTehvil.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+
+            }
+        ));
+        jScrollPane8.setViewportView(jTableğTehvil);
+
+        javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
+        jPanel10.setLayout(jPanel10Layout);
+        jPanel10Layout.setHorizontalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 717, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+        jPanel10Layout.setVerticalGroup(
+            jPanel10Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel10Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jScrollPane8, javax.swing.GroupLayout.DEFAULT_SIZE, 491, Short.MAX_VALUE)
+                .addContainerGap())
+        );
+
+        jTabbedPane1.addTab("Təhvil verdiklərim", jPanel10);
 
         jLabelTarixsaat.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabelTarixsaat.setText(" ");
@@ -1294,7 +2013,7 @@ public final class ScreenMain extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane1)
+                    .addComponent(jTabbedPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 893, Short.MAX_VALUE)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jToolBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
@@ -1316,29 +2035,7 @@ public final class ScreenMain extends javax.swing.JFrame {
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-            int index = jTable1.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTable1MouseClicked
-
     private void jButton8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton8ActionPerformed
-        ListOfMutexesislerWork = em.createNamedQuery("Mutexesiswork.findByIdMutexesis", Mutexesiswork.class)
-                .setParameter("idMutexesisler", em.find(Mutexesisler.class, l.getIdMutexesis()))
-                .getResultList();
         Refresh();
     }//GEN-LAST:event_jButton8ActionPerformed
 
@@ -1459,25 +2156,6 @@ public final class ScreenMain extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jMenuItemCetineatActionPerformed
 
-    private void jTableAnakartMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableAnakartMouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTableAnakart.getModel();
-            int index = jTableAnakart.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTableAnakartMouseClicked
-
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
         DefaultTableModel model = (DefaultTableModel) jTableAnakart.getModel();
         int index = jTableAnakart.getSelectedRow();
@@ -1502,101 +2180,6 @@ public final class ScreenMain extends javax.swing.JFrame {
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
-
-    private void jTableSadedetalProblemiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableSadedetalProblemiMouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTableSadedetalProblemi.getModel();
-            int index = jTableSadedetalProblemi.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTableSadedetalProblemiMouseClicked
-
-    private void jTableProqramTeminatiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableProqramTeminatiMouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTableProqramTeminati.getModel();
-            int index = jTableProqramTeminati.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTableProqramTeminatiMouseClicked
-
-    private void jTableMusteridenCavabMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableMusteridenCavabMouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTableMusteridenCavab.getModel();
-            int index = jTableMusteridenCavab.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTableMusteridenCavabMouseClicked
-
-    private void jTableDetalGozleyirMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableDetalGozleyirMouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTableDetalGozleyir.getModel();
-            int index = jTableDetalGozleyir.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTableDetalGozleyirMouseClicked
-
-    private void jTableTemiriMumkunsuzMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableTemiriMumkunsuzMouseClicked
-        if (evt.getClickCount() == 2) {
-            DefaultTableModel model = (DefaultTableModel) jTableTemiriMumkunsuz.getModel();
-            int index = jTableTemiriMumkunsuz.getSelectedRow();
-            if (index < 0) {
-                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
-
-            } else {
-                String id = model.getValueAt(index, 0).toString();
-                Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                        .setParameter("idMutexesisWork", Integer.parseInt(id))
-                        .getSingleResult();
-                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
-                j.setVisible(true);
-                Refresh();
-            }
-        }
-    }//GEN-LAST:event_jTableTemiriMumkunsuzMouseClicked
 
     private void jMenuItemCetineat1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat1ActionPerformed
         DefaultTableModel model = (DefaultTableModel) jTableSadedetalProblemi.getModel();
@@ -2630,13 +3213,13 @@ public final class ScreenMain extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem9ActionPerformed
 
     private void jMenuItem10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem10ActionPerformed
-//        ScreenBackup d = new ScreenBackup(this, rootPaneCheckingEnabled);
-//        d.setVisible(rootPaneCheckingEnabled);
+        ScreenBackup d = new ScreenBackup(this, rootPaneCheckingEnabled);
+        d.setVisible(rootPaneCheckingEnabled);
     }//GEN-LAST:event_jMenuItem10ActionPerformed
 
     private void jMenuItem11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem11ActionPerformed
-//        ScreenRestore d = new ScreenRestore(this, rootPaneCheckingEnabled);
-//        d.setVisible(rootPaneCheckingEnabled);
+        ScreenRestore d = new ScreenRestore(this, rootPaneCheckingEnabled);
+        d.setVisible(rootPaneCheckingEnabled);
     }//GEN-LAST:event_jMenuItem11ActionPerformed
 
     private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
@@ -2645,9 +3228,1195 @@ public final class ScreenMain extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem12ActionPerformed
 
     private void jMenuItem13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem13ActionPerformed
-//        conn.InsertUpdateLogin(new Login(1, l.idMutexesis, l.Password, "0"));
-//        System.exit(0);
+        Login d = new Login(l.getIdLogin(), l.getIdMutexesis(), l.getPassword(), "0");
+        em.merge(d);
+        em.getTransaction().begin();
+        em.getTransaction().commit();
+        System.exit(0);
     }//GEN-LAST:event_jMenuItem13ActionPerformed
+
+    private void jTableTemiriMumkunsuzMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableTemiriMumkunsuzMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableTemiriMumkunsuz.getModel();
+            int index = jTableTemiriMumkunsuz.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableTemiriMumkunsuzMouseClicked
+
+    private void jTableDetalGozleyirMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableDetalGozleyirMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableDetalGozleyir.getModel();
+            int index = jTableDetalGozleyir.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableDetalGozleyirMouseClicked
+
+    private void jTableMusteridenCavabMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableMusteridenCavabMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableMusteridenCavab.getModel();
+            int index = jTableMusteridenCavab.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableMusteridenCavabMouseClicked
+
+    private void jTableProqramTeminatiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableProqramTeminatiMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableProqramTeminati.getModel();
+            int index = jTableProqramTeminati.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableProqramTeminatiMouseClicked
+
+    private void jTableSadedetalProblemiMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableSadedetalProblemiMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableSadedetalProblemi.getModel();
+            int index = jTableSadedetalProblemi.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableSadedetalProblemiMouseClicked
+
+    private void jTableAnakartMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableAnakartMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableAnakart.getModel();
+            int index = jTableAnakart.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableAnakartMouseClicked
+
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+            int index = jTable1.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                ListOfMutexesislerWork.removeAll(ListOfMutexesislerWork);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTable1MouseClicked
+
+    private void jMenuItemCetineat38ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat38ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int index = jTable1.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat38ActionPerformed
+
+    private void jMenuItemCetineat39ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat39ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int index = jTable1.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat39ActionPerformed
+
+    private void jMenuItemCetineat40ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat40ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableAnakart.getModel();
+        int index = jTableAnakart.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat40ActionPerformed
+
+    private void jMenuItemCetineat41ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat41ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableAnakart.getModel();
+        int index = jTableAnakart.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat41ActionPerformed
+
+    private void jMenuItemCetineat42ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat42ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableSadedetalProblemi.getModel();
+        int index = jTableSadedetalProblemi.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat42ActionPerformed
+
+    private void jMenuItemCetineat43ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat43ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableSadedetalProblemi.getModel();
+        int index = jTableSadedetalProblemi.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat43ActionPerformed
+
+    private void jMenuItemCetineat44ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat44ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableProqramTeminati.getModel();
+        int index = jTableProqramTeminati.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat44ActionPerformed
+
+    private void jMenuItemCetineat45ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat45ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableProqramTeminati.getModel();
+        int index = jTableProqramTeminati.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat45ActionPerformed
+
+    private void jMenuItemCetineat46ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat46ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableMusteridenCavab.getModel();
+        int index = jTableMusteridenCavab.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat46ActionPerformed
+
+    private void jMenuItemCetineat47ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat47ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableMusteridenCavab.getModel();
+        int index = jTableMusteridenCavab.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat47ActionPerformed
+
+    private void jMenuItemCetineat48ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat48ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDetalGozleyir.getModel();
+        int index = jTableDetalGozleyir.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat48ActionPerformed
+
+    private void jMenuItemCetineat49ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat49ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDetalGozleyir.getModel();
+        int index = jTableDetalGozleyir.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat49ActionPerformed
+
+    private void jMenuItemCetineat50ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat50ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableTemiriMumkunsuz.getModel();
+        int index = jTableTemiriMumkunsuz.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat50ActionPerformed
+
+    private void jMenuItemCetineat51ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat51ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableTemiriMumkunsuz.getModel();
+        int index = jTableTemiriMumkunsuz.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat51ActionPerformed
+
+    private void jMenuItem14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem14ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("1");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem14ActionPerformed
+
+    private void jMenuItemCetineat52ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat52ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("3");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat52ActionPerformed
+
+    private void jMenuItemCetineat53ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat53ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("4");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat53ActionPerformed
+
+    private void jMenuItemCetineat54ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat54ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("5");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat54ActionPerformed
+
+    private void jMenuItemCetineat55ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat55ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("6");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat55ActionPerformed
+
+    private void jMenuItemCetineat56ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat56ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("7");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat56ActionPerformed
+
+    private void jMenuItemCetineat57ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat57ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("8");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat57ActionPerformed
+
+    private void jMenuItemCetineat58ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat58ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("10");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat58ActionPerformed
+
+    private void jMenuItem15ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem15ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("1");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem15ActionPerformed
+
+    private void jMenuItemCetineat59ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat59ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("3");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat59ActionPerformed
+
+    private void jMenuItemCetineat60ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat60ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("4");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat60ActionPerformed
+
+    private void jMenuItemCetineat61ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat61ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("5");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat61ActionPerformed
+
+    private void jMenuItemCetineat62ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat62ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("6");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat62ActionPerformed
+
+    private void jMenuItemCetineat63ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat63ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("7");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat63ActionPerformed
+
+    private void jMenuItemCetineat64ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat64ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("8");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat64ActionPerformed
+
+    private void jMenuItemCetineat65ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemCetineat65ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+
+            Mutexesiswork f = new Mutexesiswork();
+            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+            f.setStatus("9");
+            f.setDate(ScreenBax.getDate());
+            em.merge(f);
+            em.getTransaction().begin();
+            em.getTransaction().commit();
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItemCetineat65ActionPerformed
+
+    private void jTableKuryerPlataAxtarsinMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableKuryerPlataAxtarsinMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+            int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableKuryerPlataAxtarsinMouseClicked
+
+    private void jTableDiaqnostikaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableDiaqnostikaMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+            int index = jTableDiaqnostika.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
+                ScreenBax j = new ScreenBax(this, rootPaneCheckingEnabled, ScreenBax);
+                j.setVisible(true);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableDiaqnostikaMouseClicked
+
+    private void jMenuItem16ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem16ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        int index = jTable1.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem16ActionPerformed
+
+    private void jMenuItem17ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem17ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableAnakart.getModel();
+        int index = jTableAnakart.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem17ActionPerformed
+
+    private void jMenuItem18ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem18ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableSadedetalProblemi.getModel();
+        int index = jTableSadedetalProblemi.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem18ActionPerformed
+
+    private void jMenuItem19ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem19ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableProqramTeminati.getModel();
+        int index = jTableProqramTeminati.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem19ActionPerformed
+
+    private void jMenuItem20ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem20ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableMusteridenCavab.getModel();
+        int index = jTableMusteridenCavab.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem20ActionPerformed
+
+    private void jMenuItem21ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem21ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDetalGozleyir.getModel();
+        int index = jTableDetalGozleyir.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem21ActionPerformed
+
+    private void jMenuItem22ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem22ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableTemiriMumkunsuz.getModel();
+        int index = jTableTemiriMumkunsuz.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem22ActionPerformed
+
+    private void jMenuItem23ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem23ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableKuryerPlataAxtarsin.getModel();
+        int index = jTableKuryerPlataAxtarsin.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem23ActionPerformed
+
+    private void jMenuItem24ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem24ActionPerformed
+        DefaultTableModel model = (DefaultTableModel) jTableDiaqnostika.getModel();
+        int index = jTableDiaqnostika.getSelectedRow();
+        if (index < 0) {
+            JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+        } else {
+            String id = model.getValueAt(index, 0).toString();
+            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
+                    .setParameter("idMutexesisWork", Integer.parseInt(id))
+                    .getSingleResult();
+            ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
+            j.setVisible(true);
+
+            if (ScreenChangeToTemirEdilmis.Status == 1) {
+
+                Mutexesiswork f = new Mutexesiswork();
+                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
+                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
+                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
+                f.setStatus("2");
+                f.setDate(ScreenBax.getDate());
+                em.merge(f);
+                em.getTransaction().begin();
+                em.getTransaction().commit();
+            }
+            Refresh();
+        }
+    }//GEN-LAST:event_jMenuItem24ActionPerformed
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton11;
@@ -2665,7 +4434,18 @@ public final class ScreenMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem11;
     private javax.swing.JMenuItem jMenuItem12;
     private javax.swing.JMenuItem jMenuItem13;
+    private javax.swing.JMenuItem jMenuItem14;
+    private javax.swing.JMenuItem jMenuItem15;
+    private javax.swing.JMenuItem jMenuItem16;
+    private javax.swing.JMenuItem jMenuItem17;
+    private javax.swing.JMenuItem jMenuItem18;
+    private javax.swing.JMenuItem jMenuItem19;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem20;
+    private javax.swing.JMenuItem jMenuItem21;
+    private javax.swing.JMenuItem jMenuItem22;
+    private javax.swing.JMenuItem jMenuItem23;
+    private javax.swing.JMenuItem jMenuItem24;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
     private javax.swing.JMenuItem jMenuItem5;
@@ -2705,43 +4485,85 @@ public final class ScreenMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemCetineat35;
     private javax.swing.JMenuItem jMenuItemCetineat36;
     private javax.swing.JMenuItem jMenuItemCetineat37;
+    private javax.swing.JMenuItem jMenuItemCetineat38;
+    private javax.swing.JMenuItem jMenuItemCetineat39;
     private javax.swing.JMenuItem jMenuItemCetineat4;
+    private javax.swing.JMenuItem jMenuItemCetineat40;
+    private javax.swing.JMenuItem jMenuItemCetineat41;
+    private javax.swing.JMenuItem jMenuItemCetineat42;
+    private javax.swing.JMenuItem jMenuItemCetineat43;
+    private javax.swing.JMenuItem jMenuItemCetineat44;
+    private javax.swing.JMenuItem jMenuItemCetineat45;
+    private javax.swing.JMenuItem jMenuItemCetineat46;
+    private javax.swing.JMenuItem jMenuItemCetineat47;
+    private javax.swing.JMenuItem jMenuItemCetineat48;
+    private javax.swing.JMenuItem jMenuItemCetineat49;
     private javax.swing.JMenuItem jMenuItemCetineat5;
+    private javax.swing.JMenuItem jMenuItemCetineat50;
+    private javax.swing.JMenuItem jMenuItemCetineat51;
+    private javax.swing.JMenuItem jMenuItemCetineat52;
+    private javax.swing.JMenuItem jMenuItemCetineat53;
+    private javax.swing.JMenuItem jMenuItemCetineat54;
+    private javax.swing.JMenuItem jMenuItemCetineat55;
+    private javax.swing.JMenuItem jMenuItemCetineat56;
+    private javax.swing.JMenuItem jMenuItemCetineat57;
+    private javax.swing.JMenuItem jMenuItemCetineat58;
+    private javax.swing.JMenuItem jMenuItemCetineat59;
     private javax.swing.JMenuItem jMenuItemCetineat6;
+    private javax.swing.JMenuItem jMenuItemCetineat60;
+    private javax.swing.JMenuItem jMenuItemCetineat61;
+    private javax.swing.JMenuItem jMenuItemCetineat62;
+    private javax.swing.JMenuItem jMenuItemCetineat63;
+    private javax.swing.JMenuItem jMenuItemCetineat64;
+    private javax.swing.JMenuItem jMenuItemCetineat65;
     private javax.swing.JMenuItem jMenuItemCetineat7;
     private javax.swing.JMenuItem jMenuItemCetineat8;
     private javax.swing.JMenuItem jMenuItemCetineat9;
     private javax.swing.JMenuItem jMenuItemDaxilOlanNov;
     private javax.swing.JMenu jMenuMember;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel10;
+    private javax.swing.JPanel jPanel11;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JPanel jPanel3;
     private javax.swing.JPanel jPanel4;
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JPanel jPanel9;
     private javax.swing.JPopupMenu jPopupMenuAnakart;
     private javax.swing.JPopupMenu jPopupMenuDetalGozleyir;
+    private javax.swing.JPopupMenu jPopupMenuDiaqnostika;
+    private javax.swing.JPopupMenu jPopupMenuKuryerPlataAxtarsin;
     private javax.swing.JPopupMenu jPopupMenuMusteridenCavab;
     private javax.swing.JPopupMenu jPopupMenuProqramTeminati;
     private javax.swing.JPopupMenu jPopupMenuSadedetalProblemi;
     private javax.swing.JPopupMenu jPopupMenuTapşırıq;
     private javax.swing.JPopupMenu jPopupMenuTemiriMumkunsuz;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane10;
+    private javax.swing.JScrollPane jScrollPane11;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JScrollPane jScrollPane6;
     private javax.swing.JScrollPane jScrollPane7;
+    private javax.swing.JScrollPane jScrollPane8;
+    private javax.swing.JScrollPane jScrollPane9;
     private javax.swing.JTabbedPane jTabbedPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JTable jTableAnakart;
     private javax.swing.JTable jTableDetalGozleyir;
+    private javax.swing.JTable jTableDiaqnostika;
+    private javax.swing.JTable jTableKuryerPlataAxtarsin;
     private javax.swing.JTable jTableMusteridenCavab;
     private javax.swing.JTable jTableProqramTeminati;
     private javax.swing.JTable jTableSadedetalProblemi;
+    private javax.swing.JTable jTableTemir;
     private javax.swing.JTable jTableTemiriMumkunsuz;
+    private javax.swing.JTable jTableğTehvil;
     private javax.swing.JToolBar jToolBar1;
     // End of variables declaration//GEN-END:variables
 }
