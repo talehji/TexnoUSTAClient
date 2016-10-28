@@ -11,14 +11,14 @@ package Object;
  */
 public class Login {
     public int idLogin;
-    public String idMutexesis;
+    public int idMutexesis;
     public String Password;
     public String Status;
 
     public Login() {
     }
 
-    public Login(int idLogin, String idMutexesis, String Password, String Status) {
+    public Login(int idLogin, int idMutexesis, String Password, String Status) {
         this.idLogin = idLogin;
         this.idMutexesis = idMutexesis;
         this.Password = Password;

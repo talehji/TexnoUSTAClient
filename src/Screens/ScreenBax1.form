@@ -1,31 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 
 <Form version="1.5" maxVersion="1.9" type="org.netbeans.modules.form.forminfo.JDialogFormInfo">
-  <NonVisualComponents>
-    <Component class="javax.persistence.EntityManager" name="entityManager">
-      <Properties>
-        <Property name="persistenceUnit" type="java.lang.String" value="texnousta?zeroDateTimeBehavior=convertToNullPU"/>
-      </Properties>
-    </Component>
-    <Component class="javax.persistence.Query" name="daxilolannovQuery">
-      <Properties>
-        <Property name="query" type="java.lang.String" value="SELECT d FROM Daxilolannov d"/>
-        <Property name="entityManager" type="java.lang.Object" editor="org.netbeans.modules.form.j2ee.J2EEPropertyModifier$EMProperty$EntityManagerEditor">
-          <ComponentRef name="entityManager"/>
-        </Property>
-      </Properties>
-    </Component>
-    <Component class="java.util.List" name="daxilolannovList">
-      <Properties>
-        <Property name="query" type="java.lang.Object" editor="org.netbeans.modules.form.j2ee.J2EEPropertyModifier$QueryBeanProperty$QueryEditor">
-          <ComponentRef name="daxilolannovQuery"/>
-        </Property>
-      </Properties>
-      <AuxValues>
-        <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;Entity.Daxilolannov&gt;"/>
-      </AuxValues>
-    </Component>
-  </NonVisualComponents>
   <Properties>
     <Property name="defaultCloseOperation" type="int" value="2"/>
     <Property name="resizable" type="boolean" value="false"/>
@@ -234,9 +209,6 @@
       </AuxValues>
     </Component>
     <Component class="javax.swing.JComboBox" name="jComboBoxDaxilOlanNov">
-      <BindingProperties>
-        <BindingProperty name="elements" source="daxilolannovList" target="jComboBoxDaxilOlanNov" targetPath="elements" updateStrategy="0" immediately="false"/>
-      </BindingProperties>
       <AuxValues>
         <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
         <AuxValue name="JavaCodeGenerator_VariableModifier" type="java.lang.Integer" value="1"/>

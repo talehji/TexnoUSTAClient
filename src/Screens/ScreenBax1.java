@@ -1,40 +1,48 @@
 package Screens;
 
 
-import Entity.Daxilolan;
+import ConnectionDB.ConnMySql;
+import Object.DaxilOlan;
+import Object.DaxilOlanNov;
+import java.util.List;
 
 public class ScreenBax1 extends javax.swing.JDialog {
 
 
-    Daxilolan d;
+    DaxilOlan d;
+    private final ConnMySql conn;
+    private final List<DaxilOlanNov> AllDaxilOlanNov;
 
-    public ScreenBax1(java.awt.Frame parent, boolean modal, Daxilolan d) {
+    public ScreenBax1(java.awt.Frame parent, boolean modal, DaxilOlan d) {
         super(parent, modal);
         initComponents();
         this.d = d;
+        conn = new ConnMySql();
+        AllDaxilOlanNov = conn.DaxilOlanNovFindAll();
+        jComboBoxDaxilOlanNov.removeAllItems();
+        for (DaxilOlanNov l : AllDaxilOlanNov) {
+            jComboBoxDaxilOlanNov.addItem(l.Ad);
+        }
 
-        jComboBoxDaxilOlanNov.setSelectedIndex((Integer.parseInt(d.getIdDaxilOlanNov())- 1));
+
+        jComboBoxDaxilOlanNov.setSelectedIndex((d.idDaxilOlanNov- 1));
         jComboBoxDaxilOlanNov.setEditable(false);
-        jTextFieldID.setText("" + d.getIdDaxilOlan());
-        jTextFieldAd.setText(d.getAd());
-        jTextFieldSoyad.setText(d.getSoyad());
-        jTextFieldTelefon.setText(d.getTelefon());
-        jTextFieldModel.setText(d.getModel());
-        jTextFieldMarka.setText(d.getMarka());
-        jTextFieldAksesuar.setText(d.getAksesuar());
-        jEditorPaneProblem.setText(d.getProblem());
-        jEditorPaneNetice.setText(d.getNetice());
-        jEditorPaneQeyd.setText(d.getQeyd());
+        jTextFieldID.setText("" + d.idDaxilOlan);
+        jTextFieldAd.setText(d.Ad);
+        jTextFieldSoyad.setText(d.Soyad);
+        jTextFieldTelefon.setText(d.Telefon);
+        jTextFieldModel.setText(d.Model);
+        jTextFieldMarka.setText(d.Marka);
+        jTextFieldAksesuar.setText(d.Aksesuar);
+        jEditorPaneProblem.setText(d.Problem);
+        jEditorPaneNetice.setText(d.Netice);
+        jEditorPaneQeyd.setText(d.Qeyd);
     }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        bindingGroup = new org.jdesktop.beansbinding.BindingGroup();
 
-        entityManager = java.beans.Beans.isDesignTime() ? null : javax.persistence.Persistence.createEntityManagerFactory("texnousta?zeroDateTimeBehavior=convertToNullPU").createEntityManager();
-        daxilolannovQuery = java.beans.Beans.isDesignTime() ? null : entityManager.createQuery("SELECT d FROM Daxilolannov d");
-        daxilolannovList = java.beans.Beans.isDesignTime() ? java.util.Collections.emptyList() : daxilolannovQuery.getResultList();
         jButton1 = new javax.swing.JButton();
         jLabel17 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
@@ -95,9 +103,6 @@ public class ScreenBax1 extends javax.swing.JDialog {
         jTextFieldMarka.setEditable(false);
 
         jTextFieldModel.setEditable(false);
-
-        org.jdesktop.swingbinding.JComboBoxBinding jComboBoxBinding = org.jdesktop.swingbinding.SwingBindings.createJComboBoxBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, daxilolannovList, jComboBoxDaxilOlanNov);
-        bindingGroup.addBinding(jComboBoxBinding);
 
         jTextFieldTelefon.setEditable(false);
 
@@ -210,8 +215,6 @@ public class ScreenBax1 extends javax.swing.JDialog {
                 .addContainerGap())
         );
 
-        bindingGroup.bind();
-
         pack();
         setLocationRelativeTo(null);
     }// </editor-fold>//GEN-END:initComponents
@@ -222,9 +225,6 @@ public class ScreenBax1 extends javax.swing.JDialog {
 
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private java.util.List<Entity.Daxilolannov> daxilolannovList;
-    private javax.persistence.Query daxilolannovQuery;
-    private javax.persistence.EntityManager entityManager;
     private javax.swing.JButton jButton1;
     public javax.swing.JComboBox<String> jComboBoxDaxilOlanNov;
     public javax.swing.JEditorPane jEditorPaneNetice;
@@ -251,6 +251,5 @@ public class ScreenBax1 extends javax.swing.JDialog {
     public javax.swing.JTextField jTextFieldModel;
     public javax.swing.JTextField jTextFieldSoyad;
     public javax.swing.JTextField jTextFieldTelefon;
-    private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 }

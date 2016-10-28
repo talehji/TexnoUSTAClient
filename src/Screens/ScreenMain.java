@@ -1,13 +1,10 @@
 package Screens;
 
 import ConnectionDB.ConnMySql;
-import Entity.Daxilolan;
-import Entity.Daxilolannov;
-import Entity.Login;
-import Entity.Mutexesisler;
-import Entity.Mutexesiswork;
-import Entity.Tehvil;
-import Entity.Temir;
+import Object.Login;
+import Object.DaxilOlan;
+import Object.Tehvil;
+import Object.Temir;
 import Object.MutexesisWork;
 import java.awt.Font;
 import java.text.SimpleDateFormat;
@@ -15,20 +12,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 public final class ScreenMain extends javax.swing.JFrame {
 
-    private final EntityManager em;
 
     Login l;
-    private final EntityManagerFactory emf;
-    private final Mutexesisler Mutexesis;
     private final ConnMySql conn;
     private List<MutexesisWork> ListOfMutexesislerWork;
 
@@ -38,14 +29,7 @@ public final class ScreenMain extends javax.swing.JFrame {
         this.l = l;
 
         conn = new ConnMySql();
-
-        emf = Persistence.createEntityManagerFactory("TexnoUSTA_ClientPU");
-        em = emf.createEntityManager();
-
-        Mutexesis = em.createNamedQuery("Mutexesisler.findByIdMutexesisler", Mutexesisler.class)
-                .setParameter("idMutexesisler", l.getIdMutexesis())
-                .getSingleResult();
-        jMenuMember.setText(Mutexesis.getAd() + " " + Mutexesis.getSoyad());
+        jMenuMember.setText(conn.MutexesislerFindByIdMutexesisler(l.idMutexesis).Ad + " " + conn.MutexesislerFindByIdMutexesisler(l.idMutexesis).Soyad);
 
         new Thread() {
             @Override
@@ -59,7 +43,6 @@ public final class ScreenMain extends javax.swing.JFrame {
                         Date ag = new Date();
                         String Date = ad.format(ag);
                         String Time = as.format(ag);
-                        String TimeBackup = ab.format(ag);
                         jLabelTarixsaat.setText(Date + " " + Time);
                         Thread.sleep(1000);
                     } catch (InterruptedException ex) {
@@ -73,7 +56,7 @@ public final class ScreenMain extends javax.swing.JFrame {
     }
 
     public void Refresh() {
-        ListOfMutexesislerWork = conn.MutexesisWorkFindByIdMutexesisler(l.getIdMutexesis());
+        ListOfMutexesislerWork = conn.MutexesisWorkFindListByIdMutexesisler(l.idMutexesis);
         FillTheTableGonderilen();
         FillTheTableAnakart();
         FillTheTableSadeDetalProblemi();
@@ -83,8 +66,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         FillTheTableTemiriMumkunsuz();
         FillTheTableKuryerPlataAxtarsin();
         FillTheTableDiaqostika();
-        FillTheTableTehvilVerdiklerim();
         FillTheTableTemirEtdiklerim();
+        FillTheTableTehvilVerdiklerim();
     }
 
     private void FillTheTableTemirEtdiklerim() {
@@ -105,19 +88,16 @@ public final class ScreenMain extends javax.swing.JFrame {
         jTableTemir.setRowHeight(20);
         jTableTemir.setFont(new Font("Tahoma", Font.PLAIN, 14));
         jTableTemir.setModel(tmodel);
-        List<Temir> ListOfTemir = em.createNamedQuery("Temir.findByIdMutexesisler", Temir.class)
-                .setParameter("idMutexesis", em.find(Mutexesisler.class, l.getIdMutexesis()))
-                .getResultList();
-        ListOfTemir.stream().forEach((b) -> {
-            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
-            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+        List<Temir> ListOfTemir = conn.TemirFindListByIdMutexesis(l.idMutexesis);
 
+        ListOfTemir.forEach((t) -> {
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(t.idDaxilOlan);
             tmodel.insertRow(jTableTemir.getRowCount(), new Object[]{
-                b.getIdDaxilOlan().getIdDaxilOlan(),
-                b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                em.find(Daxilolannov.class, Integer.parseInt(b.getIdDaxilOlan().getIdDaxilOlanNov())).getAd(),
-                b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                b.getIdDaxilOlan().getDateTehvil(),});
+                DaxilolanSingle.idDaxilOlan,
+                DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                DaxilolanSingle.Telefon,
+                DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                DaxilolanSingle.DateTehvil,});
         });
     }
 
@@ -139,19 +119,16 @@ public final class ScreenMain extends javax.swing.JFrame {
         jTableğTehvil.setRowHeight(20);
         jTableğTehvil.setFont(new Font("Tahoma", Font.PLAIN, 14));
         jTableğTehvil.setModel(tmodel);
-        List<Tehvil> ListOfTehvil = em.createNamedQuery("Tehvil.findByIdMutexesisler", Tehvil.class)
-                .setParameter("idMutexesis", em.find(Mutexesisler.class, l.getIdMutexesis()))
-                .getResultList();
-        ListOfTehvil.stream().forEach((b) -> {
-            SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
-            SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+        List<Tehvil> ListOfTehvil = conn.TehvilFindListByIdMutexesis(l.idMutexesis);
 
+        ListOfTehvil.forEach((t) -> {
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(t.idDaxilOlan);
             tmodel.insertRow(jTableğTehvil.getRowCount(), new Object[]{
-                b.getIdDaxilOlan().getIdDaxilOlan(),
-                b.getIdDaxilOlan().getAd() + " " + b.getIdDaxilOlan().getSoyad(),
-                em.find(Daxilolannov.class, Integer.parseInt(b.getIdDaxilOlan().getIdDaxilOlanNov())).getAd(),
-                b.getIdDaxilOlan().getModel() + " " + b.getIdDaxilOlan().getMarka(),
-                b.getIdDaxilOlan().getDateTehvil(),});
+                DaxilolanSingle.idDaxilOlan,
+                DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                DaxilolanSingle.Telefon,
+                DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                DaxilolanSingle.DateTehvil,});
         });
     }
 
@@ -168,10 +145,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTable1.setRowHeight(20);
@@ -181,21 +156,18 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
-
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("1")) {
 
                     tmodel.insertRow(jTable1.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -214,10 +186,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableAnakart.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableAnakart.setRowHeight(20);
@@ -227,21 +197,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("3")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableAnakart.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -260,10 +228,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableSadedetalProblemi.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableSadedetalProblemi.setRowHeight(20);
@@ -273,21 +239,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("4")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableSadedetalProblemi.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -306,10 +270,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableProqramTeminati.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableProqramTeminati.setRowHeight(20);
@@ -319,21 +281,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("5")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableProqramTeminati.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -352,10 +312,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableMusteridenCavab.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableMusteridenCavab.setRowHeight(20);
@@ -365,21 +323,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("6")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableMusteridenCavab.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -398,10 +354,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableDetalGozleyir.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableDetalGozleyir.setRowHeight(20);
@@ -411,21 +365,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("7")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableDetalGozleyir.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -444,10 +396,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableTemiriMumkunsuz.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableTemiriMumkunsuz.setRowHeight(20);
@@ -457,21 +407,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("8")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableTemiriMumkunsuz.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -490,10 +438,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableKuryerPlataAxtarsin.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableKuryerPlataAxtarsin.setRowHeight(20);
@@ -503,21 +449,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
-            if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
+            if (DaxilolanSingle.isActive.equals("6")) {
                 if (b.Status.equals("9")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableKuryerPlataAxtarsin.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -536,10 +480,8 @@ public final class ScreenMain extends javax.swing.JFrame {
         tmodel.addColumn("Ad");
         tmodel.addColumn("Telefon");
         tmodel.addColumn("Model Marka");
-        tmodel.addColumn("Mütəxəsis");
         tmodel.addColumn("Planlaşdırılmış Tarix");
         tmodel.addColumn("Tapşırıq Tarixi");
-        tmodel.addColumn("Saatı");
 
         jTableDiaqnostika.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         jTableDiaqnostika.setRowHeight(20);
@@ -549,21 +491,19 @@ public final class ScreenMain extends javax.swing.JFrame {
         ListOfMutexesislerWork.stream().forEach((b) -> {
             SimpleDateFormat s = new SimpleDateFormat("HH:mm:ss");
             SimpleDateFormat d = new SimpleDateFormat("dd-MM-yyyy");
+            DaxilOlan DaxilolanSingle = conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan);
 
             if (conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).isActive.equals("6")) {
                 if (b.Status.equals("10")) {
 
-                    tmodel.insertRow(jTable1.getRowCount(), new Object[]{
+                    tmodel.insertRow(jTableDiaqnostika.getRowCount(), new Object[]{
                         b.IdMutexesisWork,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).idDaxilOlan,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Ad + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Soyad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Telefon,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Model + " " + conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).Marka,
-                        conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad + " " + conn.MutexesislerFindByIdMutexesisler(b.IdMutexesisler).Ad,
-                        conn.DaxilOlanFindByIdDaxilOlan(b.IdDaxilOlan).DatePlan,
-                        d.format(b.Date),
-                        s.format(b.Date)
-                    });
+                        DaxilolanSingle.idDaxilOlan,
+                        DaxilolanSingle.Ad + " " + DaxilolanSingle.Soyad,
+                        DaxilolanSingle.Telefon,
+                        DaxilolanSingle.Model + " " + DaxilolanSingle.Marka,
+                        DaxilolanSingle.DatePlan,
+                        d.format(b.Date),});
                 }
             }
         });
@@ -705,17 +645,6 @@ public final class ScreenMain extends javax.swing.JFrame {
         jTableğTehvil = new javax.swing.JTable();
         jLabelTarixsaat = new javax.swing.JLabel();
         jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        jMenuItem5 = new javax.swing.JMenuItem();
-        jMenuItem6 = new javax.swing.JMenuItem();
-        jMenuItem7 = new javax.swing.JMenuItem();
-        jMenuItem8 = new javax.swing.JMenuItem();
-        jMenu2 = new javax.swing.JMenu();
-        jMenuItemDaxilOlanNov = new javax.swing.JMenuItem();
-        jMenuItem9 = new javax.swing.JMenuItem();
-        jMenu3 = new javax.swing.JMenu();
-        jMenuItem10 = new javax.swing.JMenuItem();
-        jMenuItem11 = new javax.swing.JMenuItem();
         jMenuMember = new javax.swing.JMenu();
         jMenuItem12 = new javax.swing.JMenuItem();
         jMenuItem13 = new javax.swing.JMenuItem();
@@ -1849,6 +1778,11 @@ public final class ScreenMain extends javax.swing.JFrame {
 
             }
         ));
+        jTableTemir.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTableTemirMouseClicked(evt);
+            }
+        });
         jScrollPane9.setViewportView(jTableTemir);
 
         javax.swing.GroupLayout jPanel11Layout = new javax.swing.GroupLayout(jPanel11);
@@ -1878,6 +1812,11 @@ public final class ScreenMain extends javax.swing.JFrame {
 
             }
         ));
+        jTableğTehvil.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jTableğTehvilMouseClicked(evt);
+            }
+        });
         jScrollPane8.setViewportView(jTableğTehvil);
 
         javax.swing.GroupLayout jPanel10Layout = new javax.swing.GroupLayout(jPanel10);
@@ -1901,87 +1840,6 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         jLabelTarixsaat.setFont(new java.awt.Font("Tahoma", 1, 24)); // NOI18N
         jLabelTarixsaat.setText(" ");
-
-        jMenu1.setBackground(new java.awt.Color(255, 102, 255));
-        jMenu1.setText("File");
-        jMenu1.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-
-        jMenuItem5.setText("Mutexesislerimiz");
-        jMenuItem5.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem5ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem5);
-
-        jMenuItem6.setText("Detallar");
-        jMenuItem6.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem6ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem6);
-
-        jMenuItem7.setText("Kassa");
-        jMenuItem7.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem7ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem7);
-
-        jMenuItem8.setText("Çıxış");
-        jMenuItem8.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem8ActionPerformed(evt);
-            }
-        });
-        jMenu1.add(jMenuItem8);
-
-        jMenuBar1.add(jMenu1);
-
-        jMenu2.setBackground(new java.awt.Color(255, 102, 255));
-        jMenu2.setText("Düzəliş");
-        jMenu2.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-
-        jMenuItemDaxilOlanNov.setText("Daxil Olan Növ");
-        jMenuItemDaxilOlanNov.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItemDaxilOlanNovActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jMenuItemDaxilOlanNov);
-
-        jMenuItem9.setText("Yenilə");
-        jMenuItem9.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem9ActionPerformed(evt);
-            }
-        });
-        jMenu2.add(jMenuItem9);
-
-        jMenuBar1.add(jMenu2);
-
-        jMenu3.setText("Ayarlar");
-        jMenu3.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
-
-        jMenuItem10.setText("Arxivləşdir");
-        jMenuItem10.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem10ActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jMenuItem10);
-
-        jMenuItem11.setText("Geri qaytar");
-        jMenuItem11.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem11ActionPerformed(evt);
-            }
-        });
-        jMenu3.add(jMenuItem11);
-
-        jMenuBar1.add(jMenu3);
 
         jMenuMember.setText(" ");
         jMenuMember.setFont(new java.awt.Font("Segoe UI", 1, 14)); // NOI18N
@@ -2047,23 +1905,13 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date, ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
             Refresh();
         }
@@ -2077,52 +1925,22 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork S = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork S = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            DaxilOlan GetDaxilOlan = conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan);
 
-            Daxilolan d = new Daxilolan(S.getIdDaxilOlan().getIdDaxilOlan());
-            d.setAd(S.getIdDaxilOlan().getAd());
-            d.setSoyad(S.getIdDaxilOlan().getSoyad());
-            d.setTelefon(S.getIdDaxilOlan().getTelefon());
-            d.setIdDaxilOlanNov(S.getIdDaxilOlan().getIdDaxilOlanNov());
-            d.setModel(S.getIdDaxilOlan().getModel());
-            d.setMarka(S.getIdDaxilOlan().getMarka());
-            d.setAksesuar(S.getIdDaxilOlan().getAksesuar());
-            d.setProblem(S.getIdDaxilOlan().getProblem());
-            d.setNetice(S.getIdDaxilOlan().getNetice());
-            d.setQeyd(S.getIdDaxilOlan().getQeyd());
-            d.setDate(S.getIdDaxilOlan().getDate());
-            d.setIsActive("1");
-            d.setDatePlan(S.getIdDaxilOlan().getDatePlan());
-            d.setDateTemir(S.getIdDaxilOlan().getDateTemir());
-            d.setDateTehvil(S.getIdDaxilOlan().getDateTehvil());
-            d.setGy(S.getIdDaxilOlan().getGy());
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(S.getIdMutexesisWork());
-            f.setIdDaxilOlan(S.getIdDaxilOlan());
-            f.setIdMutexesisler(S.getIdMutexesisler());
-            f.setStatus("2");
-            f.setDate(S.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
-            em.merge(d);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            conn.DaxilOlanInsertUpdate(new DaxilOlan(GetDaxilOlan.idDaxilOlan, GetDaxilOlan.Ad,
+                    GetDaxilOlan.Soyad, GetDaxilOlan.Telefon, GetDaxilOlan.idDaxilOlanNov,
+                    GetDaxilOlan.Model, GetDaxilOlan.Marka, GetDaxilOlan.Aksesuar, GetDaxilOlan.Problem,
+                    GetDaxilOlan.Netice, GetDaxilOlan.Qeyd, GetDaxilOlan.Date, GetDaxilOlan.isActive,
+                    GetDaxilOlan.DatePlan, GetDaxilOlan.DateTemir, GetDaxilOlan.DateTehvil, GetDaxilOlan.GY));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(S.IdMutexesisWork,
+                    S.Date, S.IdMutexesisler, "2", S.IdDaxilOlan));
         }
         Refresh();
     }//GEN-LAST:event_jButton13ActionPerformed
 
     private void jButton14ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton14ActionPerformed
-        Login d = new Login(l.getIdLogin());
-        d.setIdMutexesis(l.getIdMutexesis());
-        d.setPassword(l.getPassword());
-        d.setStatus("0");
-        em.merge(d);
-        em.getTransaction().begin();
-        em.getTransaction().commit();
+        conn.LoginInsertUpdate(new Login(l.idLogin, l.idMutexesis, l.Password, "0"));
         System.exit(0);
     }//GEN-LAST:event_jButton14ActionPerformed
 
@@ -2139,19 +1957,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, 
+                    ScreenBax.Date, ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineatActionPerformed
@@ -2164,19 +1972,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork,
+                    ScreenBax.Date, ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem1ActionPerformed
@@ -2189,19 +1987,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, 
+                    ScreenBax.Date, ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat1ActionPerformed
@@ -2214,19 +2002,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, 
+                    ScreenBax.Date, ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem2ActionPerformed
@@ -2239,19 +2017,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat2ActionPerformed
@@ -2264,19 +2032,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem3ActionPerformed
@@ -2289,19 +2047,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem4ActionPerformed
@@ -2314,19 +2062,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat3ActionPerformed
@@ -2339,19 +2077,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat4ActionPerformed
@@ -2364,19 +2092,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat5ActionPerformed
@@ -2389,19 +2107,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat6ActionPerformed
@@ -2414,19 +2122,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat7ActionPerformed
@@ -2439,19 +2137,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat8ActionPerformed
@@ -2464,19 +2152,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat9ActionPerformed
@@ -2489,19 +2167,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat10ActionPerformed
@@ -2514,19 +2182,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat11ActionPerformed
@@ -2539,19 +2197,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat12ActionPerformed
@@ -2564,19 +2212,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat13ActionPerformed
@@ -2589,19 +2227,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat14ActionPerformed
@@ -2614,19 +2242,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat15ActionPerformed
@@ -2639,19 +2257,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat16ActionPerformed
@@ -2664,19 +2272,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat17ActionPerformed
@@ -2689,19 +2287,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat18ActionPerformed
@@ -2714,19 +2302,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat19ActionPerformed
@@ -2739,19 +2317,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat20ActionPerformed
@@ -2764,19 +2332,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat21ActionPerformed
@@ -2789,19 +2347,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat22ActionPerformed
@@ -2814,19 +2362,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat23ActionPerformed
@@ -2839,19 +2377,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat24ActionPerformed
@@ -2864,19 +2392,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat25ActionPerformed
@@ -2889,19 +2407,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat26ActionPerformed
@@ -2914,19 +2422,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat27ActionPerformed
@@ -2939,19 +2437,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat28ActionPerformed
@@ -2964,19 +2452,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat29ActionPerformed
@@ -2989,19 +2467,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat30ActionPerformed
@@ -3014,19 +2482,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat31ActionPerformed
@@ -3039,19 +2497,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat32ActionPerformed
@@ -3064,19 +2512,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat33ActionPerformed
@@ -3089,19 +2527,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat34ActionPerformed
@@ -3114,19 +2542,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat35ActionPerformed
@@ -3139,19 +2557,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat36ActionPerformed
@@ -3164,63 +2572,12 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat37ActionPerformed
-
-    private void jMenuItem5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem5ActionPerformed
-//        MutexesislerMain d = new MutexesislerMain();
-//        d.setVisible(rootPaneCheckingEnabled);
-//        Refresh();
-    }//GEN-LAST:event_jMenuItem5ActionPerformed
-
-    private void jMenuItem6ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem6ActionPerformed
-//        DetallarMain d = new DetallarMain();
-//        d.setVisible(rootPaneCheckingEnabled);
-//        Refresh();
-    }//GEN-LAST:event_jMenuItem6ActionPerformed
-
-    private void jMenuItem7ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem7ActionPerformed
-//        Logins l = new Logins();
-//        l.setVisible(true);
-    }//GEN-LAST:event_jMenuItem7ActionPerformed
-
-    private void jMenuItem8ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem8ActionPerformed
-        System.exit(0);
-    }//GEN-LAST:event_jMenuItem8ActionPerformed
-
-    private void jMenuItemDaxilOlanNovActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItemDaxilOlanNovActionPerformed
-//        ScreenDaxilOlanNov d = new ScreenDaxilOlanNov(this, rootPaneCheckingEnabled);
-//        d.setVisible(true);
-//        Refresh();
-    }//GEN-LAST:event_jMenuItemDaxilOlanNovActionPerformed
-
-    private void jMenuItem9ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem9ActionPerformed
-        Refresh();
-    }//GEN-LAST:event_jMenuItem9ActionPerformed
-
-    private void jMenuItem10ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem10ActionPerformed
-        ScreenBackup d = new ScreenBackup(this, rootPaneCheckingEnabled);
-        d.setVisible(rootPaneCheckingEnabled);
-    }//GEN-LAST:event_jMenuItem10ActionPerformed
-
-    private void jMenuItem11ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem11ActionPerformed
-        ScreenRestore d = new ScreenRestore(this, rootPaneCheckingEnabled);
-        d.setVisible(rootPaneCheckingEnabled);
-    }//GEN-LAST:event_jMenuItem11ActionPerformed
 
     private void jMenuItem12ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem12ActionPerformed
         ChangePassword d = new ChangePassword(this, rootPaneCheckingEnabled, l);
@@ -3228,10 +2585,7 @@ public final class ScreenMain extends javax.swing.JFrame {
     }//GEN-LAST:event_jMenuItem12ActionPerformed
 
     private void jMenuItem13ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem13ActionPerformed
-        Login d = new Login(l.getIdLogin(), l.getIdMutexesis(), l.getPassword(), "0");
-        em.merge(d);
-        em.getTransaction().begin();
-        em.getTransaction().commit();
+        conn.LoginInsertUpdate(new Login(l.idLogin, l.idMutexesis, l.Password, "0"));
         System.exit(0);
     }//GEN-LAST:event_jMenuItem13ActionPerformed
 
@@ -3370,19 +2724,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat38ActionPerformed
@@ -3395,19 +2739,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat39ActionPerformed
@@ -3420,19 +2754,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat40ActionPerformed
@@ -3445,19 +2769,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat41ActionPerformed
@@ -3470,19 +2784,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat42ActionPerformed
@@ -3495,19 +2799,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat43ActionPerformed
@@ -3520,19 +2814,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat44ActionPerformed
@@ -3545,19 +2829,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat45ActionPerformed
@@ -3570,19 +2844,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat46ActionPerformed
@@ -3595,19 +2859,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat47ActionPerformed
@@ -3620,19 +2874,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat48ActionPerformed
@@ -3645,19 +2889,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat49ActionPerformed
@@ -3670,19 +2904,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat50ActionPerformed
@@ -3695,19 +2919,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat51ActionPerformed
@@ -3720,19 +2934,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem14ActionPerformed
@@ -3745,19 +2949,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat52ActionPerformed
@@ -3770,19 +2964,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat53ActionPerformed
@@ -3795,19 +2979,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat54ActionPerformed
@@ -3820,19 +2994,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat55ActionPerformed
@@ -3845,19 +3009,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat56ActionPerformed
@@ -3870,19 +3024,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat57ActionPerformed
@@ -3895,19 +3039,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("10");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "10", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat58ActionPerformed
@@ -3920,19 +3054,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("1");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "1", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItem15ActionPerformed
@@ -3945,19 +3069,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("3");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "3", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat59ActionPerformed
@@ -3970,19 +3084,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("4");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "4", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat60ActionPerformed
@@ -3995,19 +3099,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("5");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "5", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat61ActionPerformed
@@ -4020,19 +3114,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("6");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "6", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat62ActionPerformed
@@ -4045,19 +3129,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("7");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "7", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat63ActionPerformed
@@ -4070,19 +3144,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("8");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "8", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat64ActionPerformed
@@ -4095,19 +3159,9 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
-
-            Mutexesiswork f = new Mutexesiswork();
-            f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-            f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-            f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-            f.setStatus("9");
-            f.setDate(ScreenBax.getDate());
-            em.merge(f);
-            em.getTransaction().begin();
-            em.getTransaction().commit();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
+            conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                    ScreenBax.IdMutexesisler, "9", ScreenBax.IdDaxilOlan));
             Refresh();
         }
     }//GEN-LAST:event_jMenuItemCetineat65ActionPerformed
@@ -4156,23 +3210,13 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
             Refresh();
         }
@@ -4186,23 +3230,13 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
             Refresh();
         }
@@ -4216,25 +3250,14 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem18ActionPerformed
 
@@ -4246,25 +3269,14 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem19ActionPerformed
 
@@ -4276,25 +3288,14 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem20ActionPerformed
 
@@ -4306,25 +3307,14 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem21ActionPerformed
 
@@ -4336,25 +3326,14 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem22ActionPerformed
 
@@ -4366,25 +3345,14 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem23ActionPerformed
 
@@ -4396,27 +3364,50 @@ public final class ScreenMain extends javax.swing.JFrame {
 
         } else {
             String id = model.getValueAt(index, 0).toString();
-            Mutexesiswork ScreenBax = em.createNamedQuery("Mutexesiswork.findByIdMutexesisWork", Mutexesiswork.class)
-                    .setParameter("idMutexesisWork", Integer.parseInt(id))
-                    .getSingleResult();
+            MutexesisWork ScreenBax = conn.MutexesisWorkFindByIdMutexesisWork(Integer.parseInt(id));
             ScreenChangeToTemirEdilmis j = new ScreenChangeToTemirEdilmis(this, rootPaneCheckingEnabled, ScreenBax);
             j.setVisible(true);
 
             if (ScreenChangeToTemirEdilmis.Status == 1) {
-
-                Mutexesiswork f = new Mutexesiswork();
-                f.setIdMutexesisWork(ScreenBax.getIdMutexesisWork());
-                f.setIdDaxilOlan(ScreenBax.getIdDaxilOlan());
-                f.setIdMutexesisler(ScreenBax.getIdMutexesisler());
-                f.setStatus("2");
-                f.setDate(ScreenBax.getDate());
-                em.merge(f);
-                em.getTransaction().begin();
-                em.getTransaction().commit();
+                conn.MutexesisWorkInsertUpdate(new MutexesisWork(ScreenBax.IdMutexesisWork, ScreenBax.Date,
+                        ScreenBax.IdMutexesisler, "2", ScreenBax.IdDaxilOlan));
             }
-            Refresh();
         }
     }//GEN-LAST:event_jMenuItem24ActionPerformed
+
+    private void jTableTemirMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableTemirMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableTemir.getModel();
+            int index = jTableTemir.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                DaxilOlan GetDaxilOlan = conn.DaxilOlanFindByIdDaxilOlan(Integer.parseInt(id));
+                ScreenBax1 d = new ScreenBax1(this, rootPaneCheckingEnabled, GetDaxilOlan);
+                d.setVisible(rootPaneCheckingEnabled);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableTemirMouseClicked
+
+    private void jTableğTehvilMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTableğTehvilMouseClicked
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel model = (DefaultTableModel) jTableğTehvil.getModel();
+            int index = jTableğTehvil.getSelectedRow();
+            if (index < 0) {
+                JOptionPane.showMessageDialog(this, "Sətirlərdən birini seçin!", "Xeta", JOptionPane.ERROR_MESSAGE);
+
+            } else {
+                String id = model.getValueAt(index, 0).toString();
+                DaxilOlan GetDaxilOlan = conn.DaxilOlanFindByIdDaxilOlan(Integer.parseInt(id));
+                ScreenBax1 d = new ScreenBax1(this, rootPaneCheckingEnabled, GetDaxilOlan);
+                d.setVisible(rootPaneCheckingEnabled);
+                Refresh();
+            }
+        }
+    }//GEN-LAST:event_jTableğTehvilMouseClicked
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton11;
@@ -4425,13 +3416,8 @@ public final class ScreenMain extends javax.swing.JFrame {
     private javax.swing.JButton jButton6;
     private javax.swing.JButton jButton8;
     private javax.swing.JLabel jLabelTarixsaat;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenu jMenu3;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
-    private javax.swing.JMenuItem jMenuItem10;
-    private javax.swing.JMenuItem jMenuItem11;
     private javax.swing.JMenuItem jMenuItem12;
     private javax.swing.JMenuItem jMenuItem13;
     private javax.swing.JMenuItem jMenuItem14;
@@ -4448,11 +3434,6 @@ public final class ScreenMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItem24;
     private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JMenuItem jMenuItem4;
-    private javax.swing.JMenuItem jMenuItem5;
-    private javax.swing.JMenuItem jMenuItem6;
-    private javax.swing.JMenuItem jMenuItem7;
-    private javax.swing.JMenuItem jMenuItem8;
-    private javax.swing.JMenuItem jMenuItem9;
     private javax.swing.JMenuItem jMenuItemCetineat;
     private javax.swing.JMenuItem jMenuItemCetineat1;
     private javax.swing.JMenuItem jMenuItemCetineat10;
@@ -4519,7 +3500,6 @@ public final class ScreenMain extends javax.swing.JFrame {
     private javax.swing.JMenuItem jMenuItemCetineat7;
     private javax.swing.JMenuItem jMenuItemCetineat8;
     private javax.swing.JMenuItem jMenuItemCetineat9;
-    private javax.swing.JMenuItem jMenuItemDaxilOlanNov;
     private javax.swing.JMenu jMenuMember;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel10;

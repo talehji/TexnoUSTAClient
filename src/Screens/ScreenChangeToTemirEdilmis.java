@@ -5,16 +5,13 @@
  */
 package Screens;
 
-import Entity.Daxilolan;
-import Entity.Mutexesiswork;
-import Entity.Kassa;
-import Entity.Mutexesisler;
-import Entity.Temir;
+import ConnectionDB.ConnMySql;
+import Object.MutexesisWork;
+import Object.Kassa;
+import Object.Temir;
+import Object.DaxilOlan;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 
 /**
  *
@@ -28,21 +25,24 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
      * @param parent
      * @param modal
      */
-    Mutexesiswork S;
+    MutexesisWork S;
     public static int Status = 0;
-    private final EntityManager em;
+    private final ConnMySql conn;
+    private final DaxilOlan GetDaxilOlan;
 
-    public ScreenChangeToTemirEdilmis(java.awt.Frame parent, boolean modal, Mutexesiswork d) {
+    public ScreenChangeToTemirEdilmis(java.awt.Frame parent, boolean modal, MutexesisWork d) {
         super(parent, modal);
         initComponents();
-        EntityManagerFactory emf = Persistence.createEntityManagerFactory("TexnoUSTA_ClientPU");
-        em = emf.createEntityManager();
         this.S = d;
-        jLabel1.setText("" + d.getIdDaxilOlan().getIdDaxilOlan());
-        jLabel5.setText(d.getIdDaxilOlan().getAd() + " " + d.getIdDaxilOlan().getSoyad());
-        jEditorPaneProblem.setText(d.getIdDaxilOlan().getProblem());
-        jEditorPaneNetice.setText(d.getIdDaxilOlan().getNetice());
-        jEditorPaneQeyd.setText(d.getIdDaxilOlan().getQeyd());
+        conn = new ConnMySql();
+        GetDaxilOlan = conn.DaxilOlanFindByIdDaxilOlan(S.IdDaxilOlan);
+        jLabel1.setText("" + GetDaxilOlan.idDaxilOlan);
+        jLabel5.setText(GetDaxilOlan.Ad + " " + GetDaxilOlan.Soyad);
+        jEditorPaneProblem.setText(GetDaxilOlan.Problem);
+        jEditorPaneNetice.setText(GetDaxilOlan.Netice);
+        jEditorPaneQeyd.setText(GetDaxilOlan.Qeyd);
+
+        jLabel7.setVisible(false);
     }
 
     /**
@@ -69,6 +69,7 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         jEditorPaneNetice = new javax.swing.JEditorPane();
         jScrollPane3 = new javax.swing.JScrollPane();
         jEditorPaneQeyd = new javax.swing.JEditorPane();
+        jLabel7 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         setResizable(false);
@@ -78,6 +79,14 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         jLabel3.setText("Sərf");
 
         jLabel4.setText("Qeyd");
+
+        jTextFieldSerf.setText("0.00");
+        jTextFieldSerf.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+        jTextFieldSerf.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                jTextFieldSerfKeyTyped(evt);
+            }
+        });
 
         jButton1.setText("Göndər");
         jButton1.addActionListener(new java.awt.event.ActionListener() {
@@ -101,6 +110,10 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
 
         jScrollPane3.setViewportView(jEditorPaneQeyd);
 
+        jLabel7.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
+        jLabel7.setForeground(new java.awt.Color(204, 0, 0));
+        jLabel7.setText("Məbləğ yalnız rəqəmlə göstərilməlidir! (Məs: 1.20)");
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
@@ -109,7 +122,7 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 179, Short.MAX_VALUE)
+                        .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 187, Short.MAX_VALUE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                         .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 191, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(layout.createSequentialGroup()
@@ -125,7 +138,8 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
                             .addComponent(jTextFieldSerf)
                             .addComponent(jScrollPane2)
                             .addComponent(jScrollPane1)
-                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, 330, Short.MAX_VALUE))))
+                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel7, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -143,6 +157,8 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel7)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
@@ -165,47 +181,9 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         Date k = new Date();
         SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd");
         String Date = s.format(k);
-
-        Daxilolan d = new Daxilolan(S.getIdDaxilOlan().getIdDaxilOlan());
-        d.setAd(S.getIdDaxilOlan().getAd());
-        d.setSoyad(S.getIdDaxilOlan().getSoyad());
-        d.setTelefon(S.getIdDaxilOlan().getTelefon());
-        d.setIdDaxilOlanNov(S.getIdDaxilOlan().getIdDaxilOlanNov());
-        d.setModel(S.getIdDaxilOlan().getModel());
-        d.setMarka(S.getIdDaxilOlan().getMarka());
-        d.setAksesuar(S.getIdDaxilOlan().getAksesuar());
-        d.setProblem(jEditorPaneProblem.getText());
-        d.setNetice(jEditorPaneNetice.getText());
-        d.setQeyd(jEditorPaneQeyd.getText());
-        d.setDate(S.getIdDaxilOlan().getDate());
-        d.setIsActive("2");
-        d.setDatePlan(S.getIdDaxilOlan().getDatePlan());
-        d.setDateTemir(Date);
-        d.setDateTehvil(S.getIdDaxilOlan().getDateTehvil());
-        d.setGy(S.getIdDaxilOlan().getGy());
-        em.merge(d);
-        em.getTransaction().begin();
-        em.getTransaction().commit();
-        
-        Temir t = new Temir(0);
-        t.setIdDaxilOlan(em.find(Daxilolan.class, S.getIdDaxilOlan().getIdDaxilOlan()));
-        t.setIdMutexesis(em.find(Mutexesisler.class, S.getIdMutexesisler().getIdMutexesisler()));
-        em.merge(t);
-        em.getTransaction().begin();
-        em.getTransaction().commit();
-        
-        Kassa i = new Kassa(0);
-        i.setMedaxil(0.00);
-        i.setMexaric(Double.parseDouble(jTextFieldSerf.getText()));
-        i.setDate(Date);
-        i.setIdDaxilOlan(S.getIdDaxilOlan().getIdDaxilOlan().toString());
-        i.setTerefinden("1");
-        i.setAciqlama("");
-        i.setQeyd("");
-        em.merge(i);
-        em.getTransaction().begin();
-        em.getTransaction().commit();
-        
+        conn.DaxilOlanInsertUpdate(new DaxilOlan(GetDaxilOlan.idDaxilOlan, GetDaxilOlan.Ad, GetDaxilOlan.Soyad, GetDaxilOlan.Telefon, GetDaxilOlan.idDaxilOlanNov, GetDaxilOlan.Model, GetDaxilOlan.Marka, GetDaxilOlan.Aksesuar, jEditorPaneProblem.getText(), jEditorPaneNetice.getText(), jEditorPaneQeyd.getText(), GetDaxilOlan.Date, GetDaxilOlan.isActive, GetDaxilOlan.DatePlan, Date, GetDaxilOlan.DateTehvil, GetDaxilOlan.GY));
+        conn.TemirInsertUpdate(new Temir(0, S.IdMutexesisler, S.IdDaxilOlan));
+        conn.KassaInsertUpdate(new Kassa(0, 0.00, Double.parseDouble(jTextFieldSerf.getText()), Date, S.IdDaxilOlan, "1", "", ""));
         Status = 1;
         this.dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
@@ -213,6 +191,16 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
         this.dispose();
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void jTextFieldSerfKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldSerfKeyTyped
+        char c = evt.getKeyChar();
+        if (Character.isLetter(c) && !evt.isAltDown()) {
+            evt.consume();
+            jLabel7.setVisible(true);
+        } else {
+            jLabel7.setVisible(false);
+        }
+    }//GEN-LAST:event_jTextFieldSerfKeyTyped
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton jButton1;
@@ -226,6 +214,7 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
     private javax.swing.JLabel jLabel4;
     public javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;

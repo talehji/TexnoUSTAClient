@@ -7,8 +7,12 @@ package ConnectionDB;
 
 import Object.DaxilOlan;
 import Object.DaxilOlanNov;
+import Object.Kassa;
+import Object.Login;
 import Object.MutexesisWork;
 import Object.Mutexesisler;
+import Object.Tehvil;
+import Object.Temir;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -45,7 +49,7 @@ public class ConnMySql {
 //-------------------------------I-N-S-E-R-T------------------------------------
     public void DaxilOlanInsertUpdate(DaxilOlan f) {
         try {
-            String SqlEmri = "";
+            String SqlEmri;
             if (f.idDaxilOlan == 0) {
                 SqlEmri = "INSERT into DaxilOlan (Ad, Soyad, Telefon, idDaxilOlanNov, Model, Marka, Aksesuar, Problem, Netice, Qeyd, Date, isActive, DatePlan, DateTemir, DateTehvil, GY) values("
                         + "'" + f.Ad + "',"
@@ -88,13 +92,13 @@ public class ConnMySql {
             st.execute(SqlEmri);
 
         } catch (SQLException e) {
-            System.out.println("" + e);
+            JOptionPane.showMessageDialog(null, "Error: 1001");
         }
     }
 
     public void MutexesisWorkInsertUpdate(MutexesisWork f) {
         try {
-            String SqlEmri = "";
+            String SqlEmri;
             if (f.IdMutexesisWork == 0) {
                 SqlEmri = "INSERT into MutexesisWork (Date, IdMutexesisler, Status, IdDaxilOlan) values("
                         + "'" + f.Date + "',"
@@ -113,11 +117,82 @@ public class ConnMySql {
             st.execute(SqlEmri);
 
         } catch (SQLException e) {
-            System.out.println("" + e);
+            JOptionPane.showMessageDialog(null, "Error: 1002");
         }
     }
 
-//-----------------------S-E-L-E-C-T---F-O-R------------------------------------
+    public void LoginInsertUpdate(Login f) {
+        try {
+            String SqlEmri;
+            if (f.idLogin == 0) {
+                SqlEmri = "INSERT into Login (idMutexesis, Password, Status) values("
+                        + "'" + f.idMutexesis + "',"
+                        + "'" + f.Password + "',"
+                        + "'" + f.Status + "')";
+            } else {
+                SqlEmri = "UPDATE Login SET "
+                        + "idMutexesis='" + f.idMutexesis + "',"
+                        + "Password='" + f.Password + "',"
+                        + "Status='" + f.Status + "'"
+                        + " where idLogin=" + f.idLogin;
+            }
+
+            st.execute(SqlEmri);
+
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error: 1003");
+        }
+    }
+
+    public void TemirInsertUpdate(Temir f) {
+        try {
+            String SqlEmri;
+            if (f.idTemir == 0) {
+                SqlEmri = "INSERT into Temir (idMutexesis, idDaxilOlan) values("
+                        + "'" + f.idMutexesis + "',"
+                        + "'" + f.idDaxilOlan + "')";
+            } else {
+                SqlEmri = "UPDATE Temir SET "
+                        + "idMutexesis='" + f.idMutexesis + "',"
+                        + "idDaxilOlan='" + f.idDaxilOlan + "'"
+                        + "WHERE idTemir='" + f.idTemir + "'";
+            }
+            st.execute(SqlEmri);
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(null, "Error: 1002");
+        }
+    }
+
+    public void KassaInsertUpdate(Kassa M) {
+        try {
+            String SqlEmri;
+            if (M.idKassa == 0) {
+                SqlEmri = "INSERT into Kassa (Medaxil, Mexaric, Date, idDaxilOlan, Terefinden, Aciqlama, Qeyd) values ("
+                        + "'" + M.MeDaxil + "',"
+                        + "'" + M.MeXaric + "',"
+                        + "'" + M.Date + "',"
+                        + "'" + M.idDaxilOlan + "',"
+                        + "'" + M.Terefinden + "',"
+                        + "'" + M.Aciqlama + "',"
+                        + "'" + M.Qeyd + "')";
+            } else {
+                SqlEmri = "UPDATE Kassa SET "
+                        + "MeDaxil='" + M.MeDaxil + "',"
+                        + "MeXaric='" + M.MeXaric + "',"
+                        + "Date='" + M.Date + "',"
+                        + "idDaxilOlan='" + M.idDaxilOlan + "',"
+                        + "Terefinden='" + M.Terefinden + "',"
+                        + "Aciqlama='" + M.Aciqlama + "',"
+                        + "Qeyd='" + M.Qeyd + "'"
+                        + "WHERE idKassa='" + M.idKassa + "'";
+            }
+            st.execute(SqlEmri);
+        } catch (SQLException e) {
+            System.out.println("" + e);
+        }
+    }
+    //-----------------------S-E-L-E-C-T---F-O-R------------------------------------
+
     private List<DaxilOlan> DaxilOlan(String where) {
         try {
             String SqlEmri = "SELECT * from DaxilOlan " + where;
@@ -130,8 +205,7 @@ public class ConnMySql {
             }
             return list;
         } catch (SQLException e) {
-            System.out.println("Error AllInfo : " + e);
-            JOptionPane.showMessageDialog(null, "Error: Daxil olan məlumatlar bazadan oxuna bilmədi");
+            JOptionPane.showMessageDialog(null, "Error: 1004");
             return null;
         }
     }
@@ -188,6 +262,57 @@ public class ConnMySql {
         }
     }
 
+    private List<Login> Login(String where) {
+        try {
+            String SqlEmri = "SELECT * from Login " + where;
+            List<Login> list = new ArrayList<>();
+            ResultSet rs = st.executeQuery(SqlEmri);
+            while (rs.next()) {
+                list.add(new Login(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4)));
+            }
+            return list;
+        } catch (SQLException e) {
+            System.out.println(e);
+            return null;
+        }
+    }
+
+    private List<Temir> Temir(String where) {
+        try {
+            String SqlEmri = "SELECT * from Temir " + where;
+            List<Temir> list = new ArrayList<>();
+            ResultSet rs = st.executeQuery(SqlEmri);
+            while (rs.next()) {
+
+                list.add(new Temir(rs.getInt(1), rs.getInt(2), rs.getInt(3)));
+
+            }
+            return list;
+        } catch (SQLException e) {
+            System.out.println("Error AllInfo : " + e);
+            JOptionPane.showMessageDialog(null, "Error: Daxil olan məlumatlar bazadan oxuna bilmədi");
+            return null;
+        }
+    }
+
+    private List<Tehvil> Tehvil(String where) {
+        try {
+            String SqlEmri = "SELECT * from Tehvil " + where;
+            List<Tehvil> list = new ArrayList<>();
+            ResultSet rs = st.executeQuery(SqlEmri);
+            while (rs.next()) {
+
+                list.add(new Tehvil(rs.getInt(1), rs.getInt(2), rs.getInt(3)));
+
+            }
+            return list;
+        } catch (SQLException e) {
+            System.out.println("Error AllInfo : " + e);
+            JOptionPane.showMessageDialog(null, "Error: Daxil olan məlumatlar bazadan oxuna bilmədi");
+            return null;
+        }
+    }
+
 //-------------S-E-L-E-C-T----W-I-T-H----P-A-R-A-M-E-T-R------------------------
     public List<DaxilOlan> DaxilOlanFindAll() {
         return DaxilOlan("");
@@ -205,7 +330,7 @@ public class ConnMySql {
         return MutexesisWork("where idMutexesisWork=" + ID).get(0);
     }
 
-    public List<MutexesisWork> MutexesisWorkFindByIdMutexesisler(int ID) {
+    public List<MutexesisWork> MutexesisWorkFindListByIdMutexesisler(int ID) {
         return MutexesisWork("where idMutexesisler=" + ID);
     }
 
@@ -224,4 +349,45 @@ public class ConnMySql {
     public DaxilOlanNov DaxilOlanNovFindByIdDaxilOlanNov(int ID) {
         return DaxilOlanNov("where idDaxilOlanNov=" + ID).get(0);
     }
+
+    public List<Login> LoginFindAll() {
+        return Login("");
+    }
+
+    public Login LoginFindByIdLogin(int idLogin) {
+        return Login("where idLogin=" + idLogin).get(0);
+    }
+
+    public List<Login> LoginFindListByIdMutexesisler(int idMutexesis) {
+        return Login("where idMutexesis=" + idMutexesis);
+    }
+
+    public Login LoginFindByIdMutexesisler(int idMutexesis) {
+        return Login("where idMutexesis=" + idMutexesis).get(0);
+    }
+
+    public List<Temir> TemirFindAll() {
+        return Temir("");
+    }
+
+    public List<Temir> TemirFindListByIdMutexesis(int ID) {
+        return Temir("where idMutexesis=" + ID);
+    }
+
+    public Temir TemirFindListByIdTemir(int ID) {
+        return Temir("where idTemir=" + ID).get(0);
+    }
+
+    public List<Tehvil> TehvilFindAll() {
+        return Tehvil("");
+    }
+
+    public List<Tehvil> TehvilFindListByIdMutexesis(int ID) {
+        return Tehvil("where idMutexesis=" + ID);
+    }
+
+    public Tehvil TehvilFindListByIdTehvil(int ID) {
+        return Tehvil("where idTehvil=" + ID).get(0);
+    }
+
 }
