@@ -46,17 +46,17 @@
                           <Component id="jLabel9" alignment="0" max="32767" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="0" attributes="0">
-                          <Component id="jScrollPane1" alignment="1" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldModel" alignment="0" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldAd" alignment="0" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldSoyad" alignment="0" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldTelefon" alignment="0" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldAksesuar" alignment="0" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldMarka" alignment="1" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jScrollPane2" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldID" min="-2" pref="483" max="-2" attributes="0"/>
-                          <Component id="jTextFieldDaxilOlan" alignment="1" min="-2" pref="483" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" max="-2" attributes="0">
+                          <Component id="jScrollPane1" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldModel" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldAd" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldSoyad" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldTelefon" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldAksesuar" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldMarka" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jScrollPane2" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldDaxilOlan" alignment="0" pref="483" max="32767" attributes="0"/>
+                          <Component id="jTextFieldID" alignment="0" max="32767" attributes="0"/>
                       </Group>
                   </Group>
                   <Group type="102" alignment="1" attributes="0">

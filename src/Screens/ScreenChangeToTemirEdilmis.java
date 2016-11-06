@@ -181,7 +181,10 @@ public class ScreenChangeToTemirEdilmis extends javax.swing.JDialog {
         Date k = new Date();
         SimpleDateFormat s = new SimpleDateFormat("yyyy-MM-dd");
         String Date = s.format(k);
-        conn.DaxilOlanInsertUpdate(new DaxilOlan(GetDaxilOlan.idDaxilOlan, GetDaxilOlan.Ad, GetDaxilOlan.Soyad, GetDaxilOlan.Telefon, GetDaxilOlan.idDaxilOlanNov, GetDaxilOlan.Model, GetDaxilOlan.Marka, GetDaxilOlan.Aksesuar, jEditorPaneProblem.getText(), jEditorPaneNetice.getText(), jEditorPaneQeyd.getText(), GetDaxilOlan.Date, GetDaxilOlan.isActive, GetDaxilOlan.DatePlan, Date, GetDaxilOlan.DateTehvil, GetDaxilOlan.GY));
+        conn.DaxilOlanInsertUpdate(new DaxilOlan(GetDaxilOlan.idDaxilOlan, GetDaxilOlan.Ad, 
+                GetDaxilOlan.Soyad, GetDaxilOlan.Telefon, GetDaxilOlan.idDaxilOlanNov, GetDaxilOlan.Model, 
+                GetDaxilOlan.Marka, GetDaxilOlan.Aksesuar, jEditorPaneProblem.getText(), jEditorPaneNetice.getText(), 
+                jEditorPaneQeyd.getText(), GetDaxilOlan.Date, "2", GetDaxilOlan.DatePlan, Date, GetDaxilOlan.DateTehvil, GetDaxilOlan.GY));
         conn.TemirInsertUpdate(new Temir(0, S.IdMutexesisler, S.IdDaxilOlan));
         conn.KassaInsertUpdate(new Kassa(0, 0.00, Double.parseDouble(jTextFieldSerf.getText()), Date, S.IdDaxilOlan, "1", "", ""));
         Status = 1;

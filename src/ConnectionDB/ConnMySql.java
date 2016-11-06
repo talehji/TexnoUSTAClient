@@ -1,18 +1,18 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package ConnectionDB;
 
+import Object.ChatService;
 import Object.DaxilOlan;
 import Object.DaxilOlanNov;
+import Object.GroupChat;
 import Object.Kassa;
 import Object.Login;
 import Object.MutexesisWork;
 import Object.Mutexesisler;
 import Object.Tehvil;
 import Object.Temir;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -30,19 +30,31 @@ public class ConnMySql {
 
     private Connection connection;
     private Statement st;
+    private String Connection;
 
     public ConnMySql() {
         try {
+
+            try (BufferedReader br = new BufferedReader(new FileReader("conn.txt"))) {
+
+                String sCurrentLine;
+
+                while ((sCurrentLine = br.readLine()) != null) {
+                    Connection = sCurrentLine;
+                }
+
+            } catch (IOException e) {
+            }
             Class.forName("com.mysql.jdbc.Driver");
-            String url = "jdbc:mysql://192.168.1.103:3306/texnousta";
+            String url = "jdbc:mysql://" + Connection + ":3306/texnousta";
             String user = "root";
             String password = "123456";
             connection = DriverManager.getConnection(url, user, password);
             st = connection.createStatement();
-
         } catch (ClassNotFoundException | SQLException e) {
             System.out.println("Error baglanti :" + e);
-            JOptionPane.showMessageDialog(null, "Baza ilə bağlantı alınmadı");
+            JOptionPane.showMessageDialog(null, "Serverlə bağlantı alınmadı");
+
         }
     }
 
@@ -191,6 +203,48 @@ public class ConnMySql {
             System.out.println("" + e);
         }
     }
+
+    public void ChatServiceInsertUpdate(ChatService M) {
+        try {
+            String SqlEmri;
+            if (M.idChatService == 0) {
+                SqlEmri = "INSERT into ChatService (idGroup, Text, Date) values ("
+                        + "'" + M.idGroup + "',"
+                        + "'" + M.Text + "',"
+                        + "'" + M.Date + "')";
+            } else {
+                SqlEmri = "UPDATE ChatService SET "
+                        + "idGroup='" + M.idGroup + "',"
+                        + "Text='" + M.Text + "',"
+                        + "Date='" + M.Date + "'"
+                        + "WHERE idChatService='" + M.idChatService + "'";
+            }
+            st.execute(SqlEmri);
+        } catch (SQLException e) {
+            System.out.println("" + e);
+        }
+    }
+
+    public void GroupChatInsertUpdate(GroupChat M) {
+        try {
+            String SqlEmri;
+            if (M.idGroupChat == 0) {
+                SqlEmri = "INSERT into GroupChat (idServer, idMembers, Status) values ("
+                        + "'" + M.idServer + "',"
+                        + "'" + M.idMembers + "',"
+                        + "'" + M.Status + "')";
+            } else {
+                SqlEmri = "UPDATE GroupChat SET "
+                        + "idServer='" + M.idServer + "',"
+                        + "idMembers='" + M.idMembers + "',"
+                        + "Status='" + M.Status + "'"
+                        + "WHERE idGroupChat='" + M.idGroupChat + "'";
+            }
+            st.execute(SqlEmri);
+        } catch (SQLException e) {
+            System.out.println("" + e);
+        }
+    }
     //-----------------------S-E-L-E-C-T---F-O-R------------------------------------
 
     private List<DaxilOlan> DaxilOlan(String where) {
@@ -313,7 +367,43 @@ public class ConnMySql {
         }
     }
 
+    private List<ChatService> ChatService(String where) {
+        try {
+            String SqlEmri = "SELECT * from ChatService " + where;
+            List<ChatService> list = new ArrayList<>();
+            ResultSet rs = st.executeQuery(SqlEmri);
+            while (rs.next()) {
+
+                list.add(new ChatService(rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getDate(4)));
+
+            }
+            return list;
+        } catch (SQLException e) {
+            System.out.println("Error AllInfo : " + e);
+            JOptionPane.showMessageDialog(null, "Error: Daxil olan məlumatlar bazadan oxuna bilmədi");
+            return null;
+        }
+    }
+
+    private List<GroupChat> GroupChat(String where) {
+        try {
+            String SqlEmri = "SELECT * from GroupChat " + where;
+            List<GroupChat> list = new ArrayList<>();
+            ResultSet rs = st.executeQuery(SqlEmri);
+            while (rs.next()) {
+
+                list.add(new GroupChat(rs.getInt(1), rs.getInt(2), rs.getInt(3), rs.getString(4)));
+
+            }
+            return list;
+        } catch (SQLException e) {
+            System.out.println("Error AllInfo : " + e);
+            JOptionPane.showMessageDialog(null, "Error: Daxil olan məlumatlar bazadan oxuna bilmədi");
+            return null;
+        }
+    }
 //-------------S-E-L-E-C-T----W-I-T-H----P-A-R-A-M-E-T-R------------------------
+
     public List<DaxilOlan> DaxilOlanFindAll() {
         return DaxilOlan("");
     }
@@ -328,6 +418,10 @@ public class ConnMySql {
 
     public MutexesisWork MutexesisWorkFindByIdMutexesisWork(int ID) {
         return MutexesisWork("where idMutexesisWork=" + ID).get(0);
+    }
+
+    public List<MutexesisWork> MutexesisWorkFindBySetName(String SetName, String Text) {
+        return MutexesisWork("where " + SetName + "='" + Text + "'");
     }
 
     public List<MutexesisWork> MutexesisWorkFindListByIdMutexesisler(int ID) {
@@ -390,4 +484,27 @@ public class ConnMySql {
         return Tehvil("where idTehvil=" + ID).get(0);
     }
 
+    public List<ChatService> ChatServiceFindAll() {
+        return ChatService("");
+    }
+
+    public List<ChatService> ChatServiceFindBySetName(String SetName, String Text) {
+        return ChatService("where " + SetName + "='" + Text + "'");
+    }
+
+    public ChatService ChatServiceFindByIdChatService(int ID) {
+        return ChatService("where idChatService=" + ID).get(0);
+    }
+
+    public List<GroupChat> GroupChatFindAll() {
+        return GroupChat("");
+    }
+
+    public List<GroupChat> GroupChatFindBySetName(String SetName, String Text) {
+        return GroupChat("where " + SetName + "='" + Text + "'");
+    }
+
+    public GroupChat GroupChatFindByIdChatService(int ID) {
+        return GroupChat("where idGroupChat=" + ID).get(0);
+    }
 }
